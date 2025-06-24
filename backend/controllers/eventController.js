@@ -1,0 +1,425 @@
+const Event = require('../models/Event');
+const User = require('../models/User');
+const { validationResult } = require('express-validator');
+
+// Create a new event
+exports.createEvent = async (req, res) => {
+  try {
+    console.log('createEvent: req.user._id:', req.user?._id);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { 
+      title, 
+      description, 
+      date, 
+      time, 
+      endDate,
+      endTime,
+      location, 
+      category, 
+      isTicketed, 
+      tickets,
+      coordinates,
+      address,
+      venue,
+      interests,
+      difficulty,
+      prerequisites,
+      tags,
+      type
+    } = req.body;
+
+    // Set default coordinates if not provided
+    let eventCoordinates = coordinates;
+    if (!eventCoordinates || !eventCoordinates.coordinates) {
+      eventCoordinates = {
+        type: 'Point',
+        coordinates: [0, 0] // Default coordinates, should be updated with actual location
+      };
+    }
+
+    const event = new Event({
+      title,
+      description,
+      date,
+      time,
+      endDate,
+      endTime,
+      location,
+      coordinates: eventCoordinates,
+      address,
+      venue,
+      organizer: req.user._id,
+      category,
+      isTicketed,
+      tickets: isTicketed ? tickets : [],
+      interests: interests || [],
+      difficulty: difficulty || 'beginner',
+      prerequisites: prerequisites || [],
+      tags: tags || [],
+      image: req.file ? req.file.filename : 'default-event.jpg',
+      type: type || 'other',
+      published: true,
+      status: 'published'
+    });
+
+    let savedEvent;
+    try {
+      savedEvent = await event.save();
+    } catch (saveError) {
+      console.error('Event save error:', saveError);
+      return res.status(400).json({
+        success: false,
+        message: 'Event validation failed',
+        error: saveError.message
+      });
+    }
+
+    // Use includeUnpublished: true to bypass the published filter
+    const freshEvent = await Event.findById(savedEvent._id, null, { includeUnpublished: true })
+      .populate('organizer', 'name email college');
+    if (!freshEvent) {
+      console.error('Event was not found after saving.');
+      return res.status(500).json({
+        success: false,
+        message: 'Event was not saved to the database'
+      });
+    }
+    console.log('Sending event response:', freshEvent);
+    console.log('createEvent: event.organizer:', freshEvent.organizer);
+    return res.status(201).json({
+      success: true,
+      message: 'Event created successfully',
+      data: freshEvent
+    });
+  } catch (error) {
+    console.error('Error creating event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating event',
+      error: error.message
+    });
+  }
+};
+
+// Get all events
+exports.getAllEvents = async (req, res) => {
+  try {
+    const { category, interests, difficulty, search } = req.query;
+    const query = { published: true };
+    
+    if (category) {
+      query.category = category;
+    }
+
+    if (interests) {
+      const interestArray = interests.split(',');
+      query.interests = { $in: interestArray };
+    }
+
+    if (difficulty) {
+      query.difficulty = difficulty;
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const events = await Event.find(query)
+      .populate('organizer', 'name email college')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: events.length,
+      events
+    });
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching events'
+    });
+  }
+};
+
+// Get single event
+exports.getEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id, null, { includeUnpublished: true })
+      .populate('organizer', 'name email college')
+      .populate('registeredParticipants.user', 'name email');
+    
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Increment view count
+    event.views = (event.views || 0) + 1;
+    await event.save();
+
+    res.json({
+      success: true,
+      message: 'Operation successful',
+      data: event
+    });
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching event'
+    });
+  }
+};
+
+// Register for an event
+exports.registerForEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user is already registered
+    const isAlreadyRegistered = event.registeredParticipants.some(
+      participant => participant.user.toString() === req.user._id.toString()
+    );
+
+    if (isAlreadyRegistered) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already registered for this event'
+      });
+    }
+
+    // Check capacity
+    if (event.capacity && event.registeredParticipants.length >= event.capacity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Event is at full capacity'
+      });
+    }
+
+    // Add user to registered participants
+    event.registeredParticipants.push({
+      user: req.user._id,
+      registeredAt: new Date(),
+      status: 'registered'
+    });
+
+    await event.save();
+
+    // Update user's registered events
+    const user = await User.findById(req.user._id);
+    user.eventsRegistered.push({
+      event,
+      registeredAt: new Date(),
+      status: 'registered'
+    });
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully registered for the event',
+      event
+    });
+  } catch (error) {
+    console.error('Error registering for event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error registering for event'
+    });
+  }
+};
+
+// Update event
+exports.updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user is the organizer
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this event'
+      });
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    ).populate('organizer', 'name email college');
+
+    res.json({
+      success: true,
+      message: 'Event updated successfully',
+      event: updatedEvent
+    });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating event'
+    });
+  }
+};
+
+// Publish event
+exports.publishEvent = async (req, res) => {
+  try {
+    console.log('publishEvent: req.user._id:', req.user?._id);
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+    console.log('publishEvent: event.organizer:', event.organizer);
+
+    // Check if user is the organizer
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to publish this event'
+      });
+    }
+
+    event.status = 'published';
+    event.published = true;
+    await event.save();
+
+    res.json({
+      success: true,
+      message: 'Event published successfully',
+      event
+    });
+  } catch (error) {
+    console.error('Error publishing event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error publishing event'
+    });
+  }
+};
+
+// Delete event
+exports.deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user is the organizer
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this event'
+      });
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting event'
+    });
+  }
+};
+
+// Get events by category
+exports.getEventsByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const events = await Event.find({ 
+      category: category,
+      published: true,
+      date: { $gte: new Date() }
+    })
+    .populate('organizer', 'name email college')
+    .sort({ date: 1 });
+
+    res.json({
+      success: true,
+      count: events.length,
+      events
+    });
+  } catch (error) {
+    console.error('Error fetching events by category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching events by category'
+    });
+  }
+};
+
+// Get user's registered events
+exports.getUserRegisteredEvents = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'eventsRegistered.event',
+        populate: {
+          path: 'organizer',
+          select: 'name email college'
+        }
+      });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const registeredEvents = user.eventsRegistered
+      .filter(reg => reg.event) // Filter out any null events
+      .map(reg => ({
+        ...reg.event.toObject(),
+        registrationStatus: reg.status,
+        registeredAt: reg.registeredAt
+      }));
+
+    res.json({
+      success: true,
+      count: registeredEvents.length,
+      events: registeredEvents
+    });
+  } catch (error) {
+    console.error('Error fetching user registered events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching registered events'
+    });
+  }
+};
