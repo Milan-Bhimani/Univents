@@ -176,9 +176,29 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex justify-center p-6 pt-24">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 pt-32">
+      <BackButton />
+      {/* Map Section at the top, outside the card */}
+      {event.coordinates &&
+        Array.isArray(event.coordinates.coordinates) &&
+        typeof event.coordinates.coordinates[0] === 'number' &&
+        typeof event.coordinates.coordinates[1] === 'number' &&
+        !isNaN(event.coordinates.coordinates[0]) &&
+        !isNaN(event.coordinates.coordinates[1]) && (
+          <div className="mb-8 w-full max-w-4xl mt-0">
+            <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center">
+              <FaMapMarkerAlt className="mr-2" />
+              Event Location
+            </h3>
+            <MapComponent
+              events={[event]}
+              userLocation={userLocation}
+              height="300px"
+            />
+          </div>
+      )}
+
       <div className="w-full max-w-6xl">
-        <BackButton />
         <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700 mt-4">
           {/* Event Image */}
           <div className="relative h-96 overflow-hidden">
@@ -225,26 +245,6 @@ export default function EventPage() {
                 </div>
               </div>
             </div>
-
-            {/* Map Section */}
-            {event.coordinates &&
-             Array.isArray(event.coordinates.coordinates) &&
-             typeof event.coordinates.coordinates[0] === 'number' &&
-             typeof event.coordinates.coordinates[1] === 'number' &&
-             !isNaN(event.coordinates.coordinates[0]) &&
-             !isNaN(event.coordinates.coordinates[1]) && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center">
-                  <FaMapMarkerAlt className="mr-2" />
-                  Event Location
-                </h3>
-                <MapComponent
-                  events={[event]}
-                  userLocation={userLocation}
-                  height="300px"
-                />
-              </div>
-            )}
 
             {/* Event Tags and Interests */}
             {(event.tags && event.tags.length > 0) || (event.interests && event.interests.length > 0) && (
@@ -345,7 +345,7 @@ export default function EventPage() {
           </div>
 
           {/* Footer */}
-          <div className="p-8 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+          {/* <div className="p-8 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <div className="text-center sm:text-left">
               <h3 className="text-white font-bold mb-1">Organized by</h3>
               <p className="text-gray-400">{event.organizer?.name || 'Unknown Organizer'}</p>
@@ -372,7 +372,7 @@ export default function EventPage() {
                 </button>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Error Display */}
           {purchaseError && (
