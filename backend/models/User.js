@@ -44,6 +44,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['technology', 'business', 'design', 'marketing', 'science', 'arts', 'sports', 'health', 'education', 'networking']
   }],
+  tags: [{
+    type: String,
+    trim: true
+  }],
   preferences: {
     maxDistance: {
       type: Number,

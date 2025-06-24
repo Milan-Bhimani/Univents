@@ -65,7 +65,7 @@ router.get('/profile', async (req, res) => {
 // Update user profile
 router.put('/profile', async (req, res) => {
   try {
-    const { name, phone, address, college } = req.body;
+    const { name, phone, address, college, tags } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!name) {
@@ -87,6 +87,7 @@ router.put('/profile', async (req, res) => {
     user.phone = phone;
     user.address = address;
     user.college = college;
+    if (tags !== undefined) user.tags = tags;
 
     const updatedUser = await user.save();
 
@@ -99,7 +100,8 @@ router.put('/profile', async (req, res) => {
         email: updatedUser.email,
         phone: updatedUser.phone,
         address: updatedUser.address,
-        college: updatedUser.college
+        college: updatedUser.college,
+        tags: updatedUser.tags
       }
     });
   } catch (error) {

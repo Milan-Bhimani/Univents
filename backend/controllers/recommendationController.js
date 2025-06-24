@@ -63,30 +63,40 @@ async function getContentBasedRecommendations(user, events) {
   
   for (const event of events) {
     let score = 0;
-    
-    // Interest matching (50% weight)
+    let reasons = [];
+    // Interest matching (40% weight)
     if (user.interests && event.interests) {
       const matchingInterests = event.interests.filter(interest => 
         user.interests.includes(interest)
       );
-      score += (matchingInterests.length / Math.max(event.interests.length, 1)) * 50;
+      if (matchingInterests.length > 0) {
+        reasons.push('Matched your interests');
+      }
+      score += (matchingInterests.length / Math.max(event.interests.length, 1)) * 40;
     }
-
-    // Category preference (30% weight)
+    // Tag matching (30% weight)
+    if (user.tags && event.tags && user.tags.length > 0 && event.tags.length > 0) {
+      const matchingTags = event.tags.filter(tag => user.tags.includes(tag));
+      if (matchingTags.length > 0) {
+        reasons.push('Matched your tags');
+      }
+      score += (matchingTags.length / Math.max(event.tags.length, 1)) * 30;
+    }
+    // Category preference (20% weight)
     if (user.preferences.eventTypes && user.preferences.eventTypes.includes(event.category)) {
-      score += 30;
-    }
-
-    // Difficulty match (20% weight)
-    if (user.preferences.difficulty && user.preferences.difficulty.includes(event.difficulty)) {
+      reasons.push('Preferred event type');
       score += 20;
     }
-
+    // Difficulty match (10% weight)
+    if (user.preferences.difficulty && user.preferences.difficulty.includes(event.difficulty)) {
+      reasons.push('Preferred difficulty');
+      score += 10;
+    }
     if (score > 0) {
       recommendations.push({
         event: event,
         score: score,
-        reason: 'Based on your interests and preferences'
+        reason: reasons.join(', ') || 'Based on your interests and preferences'
       });
     }
   }

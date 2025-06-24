@@ -10,8 +10,14 @@ const EditProfile = () => {
     name: '',
     phone: '',
     college: '',
-    address: ''
+    address: '',
+    tags: []
   });
+
+  const availableTags = [
+    'technology', 'business', 'design', 'marketing', 'science', 
+    'arts', 'sports', 'health', 'education', 'networking'
+  ];
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -21,7 +27,8 @@ const EditProfile = () => {
         name: user.name || '',
         phone: user.phone || '',
         college: user.college || '',
-        address: user.address || ''
+        address: user.address || '',
+        tags: user.tags || []
       });
     }
   }, []);
@@ -61,6 +68,15 @@ const EditProfile = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTagToggle = (tag) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag]
+    }));
   };
 
   const handleChange = (e) => {
@@ -120,6 +136,23 @@ const EditProfile = () => {
               className="w-full bg-gray-800/50 border border-gray-700 px-4 py-3 rounded-xl text-white"
               rows="3"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-yellow-400/90 font-medium">Tags (Select your interests)</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {availableTags.map((tag) => (
+                <label key={tag} className="flex items-center text-white text-sm bg-gray-700/30 p-2 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.tags.includes(tag)}
+                    onChange={() => handleTagToggle(tag)}
+                    className="mr-2"
+                  />
+                  {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                </label>
+              ))}
+            </div>
           </div>
 
           {error && (
