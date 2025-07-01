@@ -32,7 +32,7 @@ const Layout = () => {
   return (
     <>
       {shouldShowNavbar && <Navbar />}
-      <div className={shouldShowNavbar ? "pt-16" : ""}>
+      <div className={shouldShowNavbar ? "pt-20" : ""}>
         <Outlet />
       </div>
     </>

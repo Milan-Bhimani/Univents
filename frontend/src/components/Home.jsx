@@ -238,7 +238,7 @@ export default function Home() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={{ duration: 0.5 }}
-          className="px-6 mt-8"
+          className="px-6 mt-24 relative z-0"
         >
           <div className="max-w-6xl mx-auto">
             <h3 className="text-2xl font-semibold text-yellow-400 mb-4">Events Map</h3>

@@ -49,7 +49,7 @@ const Navbar = () => {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 w-full bg-opacity-80 backdrop-blur-md bg-gray-800 shadow-lg z-50 px-6 py-4 flex justify-between items-center text-white"
+        className="fixed top-0 left-0 w-full bg-opacity-80 backdrop-blur-md bg-gray-800 shadow-lg z-[9999] px-6 py-4 flex justify-between items-center text-white"
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}

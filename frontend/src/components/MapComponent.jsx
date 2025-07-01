@@ -34,7 +34,7 @@ const MapComponent = ({ events = [], userLocation, height = '400px' }) => {
     : [40.7128, -74.0060]; // Default to NYC
 
   return (
-    <div className="w-full rounded-lg overflow-hidden border border-gray-700">
+    <div className="w-full rounded-lg overflow-hidden border border-gray-700 relative z-0">
       <MapContainer center={defaultPosition} zoom={12} style={{ height, width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
