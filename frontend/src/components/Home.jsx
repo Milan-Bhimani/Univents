@@ -22,10 +22,12 @@ export default function Home() {
   const [showInterestSelector, setShowInterestSelector] = useState(false);
   const [userInterests, setUserInterests] = useState([]);
   const [showMap, setShowMap] = useState(false);
+  const [onlineEvents, setOnlineEvents] = useState([]);
 
   useEffect(() => {
     checkUserSetup();
     fetchEvents();
+    fetchOnlineEvents();
   }, []);
 
   const checkUserSetup = async () => {
@@ -85,6 +87,23 @@ export default function Home() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOnlineEvents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/events?onlineOnly=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setOnlineEvents(data.data || []);
+      }
+    } catch (err) {
+      // ignore
     }
   };
 
@@ -232,6 +251,51 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Search Results */}
+      {searchQuery && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="px-6 mt-8"
+        >
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-semibold text-yellow-400">
+                Search Results for "{searchQuery}"
+              </h3>
+              <span className="text-gray-400">
+                {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
+              </span>
+            </div>
+            
+            {filteredEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.map(event => (
+                  <motion.div
+                    key={event._id}
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/30 hover:border-yellow-400/50 transition-all duration-300"
+                  >
+                    <img src={getEventImage(event.category)} alt={event.title} className="w-full h-40 object-cover rounded mb-4" />
+                    <h3 className="text-xl font-semibold text-yellow-400 mb-2">{event.title}</h3>
+                    <p className="text-gray-400 mb-2 line-clamp-2">{event.description}</p>
+                    <div className="text-gray-400 text-sm mb-2">{new Date(event.date).toLocaleString()}</div>
+                    <div className="text-gray-400 text-sm mb-2">📍 {event.location}</div>
+                    <Link to={`/events/${event._id}`} className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">View Details →</Link>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700/30">
+                <div className="text-gray-400 text-xl mb-2">No events found for "{searchQuery}"</div>
+                <p className="text-gray-500">Try different keywords or browse all events</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Map View */}
       {showMap && (
         <motion.div
@@ -255,12 +319,51 @@ export default function Home() {
       {/* Personalized Sections */}
       <section className="py-16 px-6 events-section">
         <div className="max-w-6xl mx-auto space-y-8">
+          {/* Online Events Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-yellow-400">🌐 Online Events</h2>
+              <Link to="/events/online" className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">
+                View All Online Events →
+              </Link>
+            </div>
+            
+            {onlineEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {onlineEvents.slice(0, 6).map(event => (
+                  <motion.div
+                    key={event._id}
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/30 hover:border-yellow-400/50 transition-all duration-300"
+                  >
+                    <img src={getEventImage(event.category)} alt={event.title} className="w-full h-40 object-cover rounded mb-4" />
+                    <h3 className="text-xl font-semibold text-yellow-400 mb-2">{event.title}</h3>
+                    <p className="text-gray-400 mb-2 line-clamp-2">{event.description}</p>
+                    <div className="text-gray-400 text-sm mb-2">{new Date(event.date).toLocaleString()}</div>
+                    <div className="text-gray-400 text-sm mb-2">📍 {event.location}</div>
+                    <Link to={`/events/${event._id}`} className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">View Details →</Link>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-800/30 rounded-xl border border-gray-700/30">
+                <div className="text-gray-400 text-xl mb-2">No online events available at the moment</div>
+                <p className="text-gray-500">Check back later for virtual events!</p>
+              </div>
+            )}
+          </motion.div>
+
           {/* Recommended Events */}
           {userInterests.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
             >
               <RecommendedEvents />
             </motion.div>

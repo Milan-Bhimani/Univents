@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaHome, FaUserCircle, FaChevronDown } from "react-icons/fa";
+import { FaHome, FaUserCircle, FaChevronDown, FaGlobe, FaLaptopCode, FaChalkboardTeacher, FaTools, FaMicrophone, FaHandshake, FaTrophy, FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -83,14 +83,20 @@ const Navbar = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="absolute left-0 w-48 mt-2 origin-top-left bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-[100]"
+                className="absolute left-0 w-56 mt-2 origin-top-left bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-[100]"
                 role="menu"
                 aria-orientation="vertical"
               >
                 <div className="py-1">
-                  <Link to="/events/workshops" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Workshops</Link>
-                  <Link to="/events/hackathons" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Hackathons</Link>
-                  <Link to="/events/seminars" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Seminars</Link>
+                  <Link to="/events" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaGlobe className="text-lg" /> All Events</Link>
+                  <Link to="/events/online" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaGlobe className="text-lg" /> Online Events</Link>
+                  <div className="border-t border-gray-700 my-1"></div>
+                  <Link to="/events/hackathons" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaLaptopCode className="text-lg" /> Hackathons</Link>
+                  <Link to="/events/seminars" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaChalkboardTeacher className="text-lg" /> Seminars</Link>
+                  <Link to="/events/workshops" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaTools className="text-lg" /> Workshops</Link>
+                  <Link to="/events/conferences" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaMicrophone className="text-lg" /> Conferences</Link>
+                  <Link to="/events/networking" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaHandshake className="text-lg" /> Networking</Link>
+                  <Link to="/events/competitions" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem"><FaTrophy className="text-lg" /> Competitions</Link>
                 </div>
               </motion.div>
             )}
@@ -121,10 +127,9 @@ const Navbar = () => {
               >
                 <div className="py-1">
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Profile</Link>
-                  <Link to="/profile/settings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Settings</Link>
-                  <Link to="/create-event/edit" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Create Event</Link>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       localStorage.removeItem('token');
                       navigate('/login');
                     }}

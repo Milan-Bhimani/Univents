@@ -57,11 +57,11 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   switch (event.type) {
     case 'payment_intent.succeeded':
       const paymentIntent = event.data.object;
-      console.log('Payment succeeded:', paymentIntent.id);
+      
       // Here you would update your database to record the successful payment
       break;
     default:
-      console.log(`Unhandled event type ${event.type}`);
+      
   }
 
   res.json({ received: true });

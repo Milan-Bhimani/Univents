@@ -27,7 +27,6 @@ export const generateOTP = async (email) => {
     }
 
     const data = await response.json();
-    console.log('OTP generation response:', data);
     return data;
   } catch (error) {
     console.error('OTP generation error:', error);
@@ -61,7 +60,6 @@ export const verifyOTP = async (email, otp) => {
     }
 
     const data = await response.json();
-    console.log('OTP verification response:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'OTP verification failed');

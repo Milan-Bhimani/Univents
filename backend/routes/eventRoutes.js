@@ -32,6 +32,9 @@ router.delete('/:id', eventController.deleteEvent);
 // Get user's registered events
 router.get('/user/registered', eventController.getUserRegisteredEvents);
 
+// Debug endpoint to check all events
+router.get('/debug/all', eventController.debugEvents);
+
 // Purchase tickets for an event
 router.post('/:eventId/purchase', async (req, res) => {
   try {
@@ -50,6 +53,14 @@ router.post('/:eventId/purchase', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Event not found'
+      });
+    }
+
+    // Block organizer from buying tickets
+    if (event.organizer.toString() === req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Organizers cannot buy tickets for their own events.'
       });
     }
 
@@ -96,6 +107,19 @@ router.post('/:eventId/purchase', async (req, res) => {
 
     await user.save();
 
+    // Add user to registeredParticipants if not already present
+    const isAlreadyRegistered = event.registeredParticipants.some(
+      participant => participant.user.toString() === req.user._id.toString()
+    );
+    if (!isAlreadyRegistered) {
+      event.registeredParticipants.push({
+        user: req.user._id,
+        registeredAt: new Date(),
+        status: 'registered'
+      });
+      await event.save();
+    }
+
     res.status(200).json({
       success: true,
       message: 'Tickets purchased successfully',
@@ -109,16 +133,6 @@ router.post('/:eventId/purchase', async (req, res) => {
       success: false,
       message: 'Error processing ticket purchase'
     });
-  }
-});
-
-// Get all events
-router.get('/', async (req, res) => {
-  try {
-    const events = await Event.find();
-    res.status(200).json({ success: true, data: events });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to fetch events' });
   }
 });
 

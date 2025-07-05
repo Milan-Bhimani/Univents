@@ -12,17 +12,3 @@ export const getEventImage = (category) => {
 
   return eventImages[category] || eventImages.other;
 };
-
-export const getEventIcon = (category) => {
-  const eventIcons = {
-    hackathon: '💻',
-    seminar: '🎓',
-    workshop: '🔧',
-    conference: '🎤',
-    networking: '🤝',
-    competition: '🏆',
-    other: '📅'
-  };
-
-  return eventIcons[category] || eventIcons.other;
-};

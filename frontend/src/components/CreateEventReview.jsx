@@ -33,7 +33,7 @@ const CreateEventReview = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Please login to publish event');
 
-      console.log('Creating event with data:', eventData);
+  
       
       const createResponse = await fetch(`${API_URL}/events/create`, {
         method: 'POST',
@@ -45,7 +45,7 @@ const CreateEventReview = () => {
         body: JSON.stringify(eventData)
       });
 
-      console.log('Create event response status:', createResponse.status);
+      
       
       if (!createResponse.ok) {
         const text = await createResponse.text();
@@ -59,7 +59,7 @@ const CreateEventReview = () => {
       }
 
       const eventResult = await createResponse.json();
-      console.log('Event created successfully:', eventResult);
+      
 
       // Safety check for eventResult.data and eventResult.data._id
       if (!eventResult.data || !eventResult.data._id) {
@@ -79,7 +79,7 @@ const CreateEventReview = () => {
         }
       });
       const fetchResult = await fetchResponse.json();
-      console.log('Fetched event after creation:', fetchResult);
+      
 
       // No need to publish event, as it is already published on creation
       localStorage.removeItem('tempEventData');

@@ -18,10 +18,20 @@ export default function EventPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     fetchEvent();
     getUserLocation();
+    // Get current user ID from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        setCurrentUserId(userObj._id);
+      } catch {}
+    }
   }, [id]);
 
   const getUserLocation = () => {
@@ -34,7 +44,7 @@ export default function EventPage() {
           });
         },
         (error) => {
-          console.log('Location access denied or unavailable');
+  
         }
       );
     }
@@ -58,7 +68,7 @@ export default function EventPage() {
       });
 
       const data = await response.json();
-      console.log('Event fetch response:', data);
+
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch event');
@@ -82,39 +92,38 @@ export default function EventPage() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = async (paymentIntent) => {
+  const handleRegisterWithPayment = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (ticketDetails) => {
     try {
-      // Record the ticket purchase
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/events/${id}/purchase-ticket`, {
+      const response = await fetch('http://localhost:5000/api/users/tickets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ticketId: selectedTicket._id,
-          paymentIntentId: paymentIntent.id,
-          amount: selectedTicket.price
+          ...ticketDetails
         })
       });
-
       if (response.ok) {
-        alert('Ticket purchased successfully!');
-        fetchEvent(); // Refresh event data
+        alert('Ticket confirmed! Check your profile for your ticket.');
+        setShowPaymentModal(false);
       }
     } catch (error) {
-      console.error('Error recording ticket purchase:', error);
+      alert('Error confirming ticket.');
     }
   };
 
-  const handleRegisterForEvent = async () => {
+  const handleFreeRegister = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Please login to register for events');
       }
-
       const response = await fetch(`http://localhost:5000/api/events/${id}/register`, {
         method: 'POST',
         headers: {
@@ -122,13 +131,11 @@ export default function EventPage() {
           'Content-Type': 'application/json'
         }
       });
-
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || 'Failed to register for event');
       }
-
-      // Refresh event data to show updated registration
+      setShowSuccess(true);
       fetchEvent();
       alert('Successfully registered for the event!');
     } catch (error) {
@@ -176,28 +183,8 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 pt-32">
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 pt-20">
       <BackButton />
-      {/* Map Section at the top, outside the card */}
-      {event.coordinates &&
-        Array.isArray(event.coordinates.coordinates) &&
-        typeof event.coordinates.coordinates[0] === 'number' &&
-        typeof event.coordinates.coordinates[1] === 'number' &&
-        !isNaN(event.coordinates.coordinates[0]) &&
-        !isNaN(event.coordinates.coordinates[1]) && (
-          <div className="mb-8 w-full max-w-4xl mt-0">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center">
-              <FaMapMarkerAlt className="mr-2" />
-              Event Location
-            </h3>
-            <MapComponent
-              events={[event]}
-              userLocation={userLocation}
-              height="300px"
-            />
-          </div>
-      )}
-
       <div className="w-full max-w-6xl">
         <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700 mt-4">
           {/* Event Image */}
@@ -342,6 +329,60 @@ export default function EventPage() {
                 </div>
               )}
             </div>
+
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-8 gap-4">
+              {(!currentUserId || !event.organizer || event.organizer._id !== currentUserId) && (
+                <>
+                  {event.isTicketed && event.tickets && event.tickets.length > 0 ? (
+                    event.tickets.length === 1 ? (
+                      <button
+                        onClick={() => navigate('/mock-payment', { state: {
+                          eventId: event._id,
+                          eventTitle: event.title,
+                          ticketId: event.tickets[0]._id,
+                          ticketName: event.tickets[0].name,
+                          ticketPrice: event.tickets[0].price,
+                          ticketQuantity: 1
+                        } })}
+                        className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
+                      >
+                        Register / Get Ticket
+                      </button>
+                    ) : (
+                      <select
+                        onChange={e => {
+                          const t = event.tickets.find(t => t._id === e.target.value);
+                          if (t) {
+                            navigate('/mock-payment', { state: {
+                              eventId: event._id,
+                              eventTitle: event.title,
+                              ticketId: t._id,
+                              ticketName: t.name,
+                              ticketPrice: t.price,
+                              ticketQuantity: 1
+                            } });
+                          }
+                        }}
+                        className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Select Ticket Type</option>
+                        {event.tickets.map(t => (
+                          <option key={t._id} value={t._id}>{t.name} ({t.price ? `₹${t.price}` : 'Free'})</option>
+                        ))}
+                      </select>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => navigate('/mock-payment', { state: { eventId: event._id, eventTitle: event.title } })}
+                      className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
+                    >
+                      Register / Get Ticket
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Footer */}
@@ -383,13 +424,32 @@ export default function EventPage() {
         </div>
       </div>
 
+      {/* Map Section at the bottom, only for offline events */}
+      {event.location && event.location.toLowerCase() !== 'online' && event.coordinates &&
+        Array.isArray(event.coordinates.coordinates) &&
+        typeof event.coordinates.coordinates[0] === 'number' &&
+        typeof event.coordinates.coordinates[1] === 'number' &&
+        !isNaN(event.coordinates.coordinates[0]) &&
+        !isNaN(event.coordinates.coordinates[1]) && (
+          <div className="mt-12 w-full max-w-4xl">
+            <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center">
+              <FaMapMarkerAlt className="mr-2" />
+              Event Location
+            </h3>
+            <MapComponent
+              coordinates={event.coordinates.coordinates}
+              location={event.location}
+              eventTitle={event.title}
+            />
+          </div>
+      )}
+
       {/* Payment Modal */}
       <PaymentModal
-        isOpen={showPaymentModal}
+        event={event}
+        open={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        amount={selectedTicket?.price || 0}
-        eventTitle={event.title}
-        onSuccess={handlePaymentSuccess}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     </div>
   );

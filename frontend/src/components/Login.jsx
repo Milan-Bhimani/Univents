@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/authservice';
 import { generateOTP, verifyOTP } from '../services/otpService';
@@ -39,11 +39,9 @@ export default function Login() {
     try {
       if (!otpSent) {
         const loginData = await login(formData.email, formData.password);
-        console.log('Login response:', loginData);
 
         if (loginData.success) {
           const otpResult = await generateOTP(formData.email);
-          console.log('OTP generation result:', otpResult);
 
           if (otpResult.success) {
             setOtpSent(true);
@@ -61,7 +59,6 @@ export default function Login() {
         }
 
         const verifyResult = await verifyOTP(formData.email, otp);
-        console.log('Full OTP verification response:', verifyResult);
 
         if (!verifyResult || !verifyResult.success || !verifyResult.data) {
           throw new Error('Invalid response format from server');
@@ -75,17 +72,14 @@ export default function Login() {
 
         // Store auth data
         localStorage.setItem('token', token);
-        console.log('Token successfully stored in localStorage');
         
         if (user && typeof user === 'object') {
           localStorage.setItem('user', JSON.stringify(user));
-          console.log('User data stored in localStorage');
         }
 
         setSuccess('Login successful!');
         // Navigate after a short delay
         setTimeout(() => {
-          console.log('Navigating to home page...');
           navigate('/home');
         }, 500);
       }

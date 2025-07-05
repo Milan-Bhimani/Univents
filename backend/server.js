@@ -5,11 +5,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 
-// Add these debug logs at the start
-console.log('Environment Check:');
-console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Exists' : 'Missing');
-console.log('JWT_EXPIRES_IN:', process.env.JWT_EXPIRES_IN);
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Exists' : 'Missing');
+// Environment check
 
 // Define fallback values
 const fallback_mongodb_uri = 'mongodb://localhost:27017/univents';
@@ -39,7 +35,7 @@ const MONGODB_URI = process.env.MONGODB_URI || fallback_mongodb_uri;
 const JWT_SECRET = process.env.JWT_SECRET || fallback_jwt_secret;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || fallback_jwt_expires_in;
 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
 
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/auth');

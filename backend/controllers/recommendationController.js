@@ -72,7 +72,12 @@ async function getContentBasedRecommendations(user, events) {
       if (matchingInterests.length > 0) {
         reasons.push('Matched your interests');
       }
-      score += (matchingInterests.length / Math.max(event.interests.length, 1)) * 40;
+      const interestScore = (matchingInterests.length / Math.max(event.interests.length, 1)) * 40;
+      const interestPercent = (matchingInterests.length / Math.max(event.interests.length, 1)) * 100;
+
+      score += interestScore;
+      // Optionally, attach interestPercent to the event for frontend display
+      event._doc.interestPercent = interestPercent;
     }
     // Tag matching (30% weight)
     if (user.tags && event.tags && user.tags.length > 0 && event.tags.length > 0) {

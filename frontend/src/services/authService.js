@@ -17,8 +17,6 @@ const validateToken = async (token) => {
 
 export const login = async (email, password) => {
   try {
-    console.log('Attempting login for:', email);
-    
     const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: {
@@ -37,8 +35,6 @@ export const login = async (email, password) => {
     }
 
     const data = await response.json();
-    console.log('Raw server response:', response);
-    console.log('Parsed response data:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'Login failed');
@@ -78,8 +74,6 @@ export const login = async (email, password) => {
 
 export const signup = async (name, email, password) => {
   try {
-    console.log('Attempting signup for:', email);
-    
     const response = await fetch(`${API_URL}/signup`, {
       method: 'POST',
       headers: {
@@ -89,8 +83,6 @@ export const signup = async (name, email, password) => {
     });
 
     const data = await response.json();
-    console.log('Raw signup response:', response);
-    console.log('Parsed signup data:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'Signup failed');

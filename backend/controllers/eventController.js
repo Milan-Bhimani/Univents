@@ -1,11 +1,12 @@
 const Event = require('../models/Event');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
+const nodemailer = require('nodemailer');
+const mailer = require('../utils/mailer');
 
 // Create a new event
 exports.createEvent = async (req, res) => {
   try {
-    console.log('createEvent: req.user._id:', req.user?._id);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ success: false, errors: errors.array() });
@@ -88,8 +89,32 @@ exports.createEvent = async (req, res) => {
         message: 'Event was not saved to the database'
       });
     }
-    console.log('Sending event response:', freshEvent);
-    console.log('createEvent: event.organizer:', freshEvent.organizer);
+
+
+    // Notify matching users
+    const users = await User.find({});
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    for (const user of users) {
+      const percent = getInterestMatchPercent(user.interests, event.interests);
+      let inRange = false;
+      if (event.location === 'Online') {
+        inRange = true;
+      } else if (user.location && user.location.coordinates && event.coordinates && event.coordinates.coordinates) {
+        const dist = getDistanceKm(user.location.coordinates, event.coordinates.coordinates);
+        inRange = dist <= 25; // 25km
+      }
+      if (percent > 50 && inRange) {
+        try {
+          await sendEventEmail(user, event);
+          emailsSent++;
+        } catch (e) {
+          emailsFailed++;
+          console.error(`[MAIL] Failed to send event email to: ${user.email}`, e);
+        }
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Event created successfully',
@@ -108,7 +133,7 @@ exports.createEvent = async (req, res) => {
 // Get all events
 exports.getAllEvents = async (req, res) => {
   try {
-    const { category, interests, difficulty, search } = req.query;
+    const { category, interests, difficulty, search, onlineOnly } = req.query;
     const query = { published: true };
     
     if (category) {
@@ -132,6 +157,24 @@ exports.getAllEvents = async (req, res) => {
       ];
     }
 
+    if (onlineOnly === 'true') {
+      // Filter for online events using case-insensitive regex
+      const onlineLocationFilter = { location: { $regex: /online|virtual|zoom|google meet|teams|webinar|web conference/i } };
+      
+      if (query.$or) {
+        // If there's already a search query, combine them with AND logic
+        query.$and = [
+          { $or: query.$or },
+          onlineLocationFilter
+        ];
+        delete query.$or; // Remove the original $or since it's now in $and
+      } else {
+        // If no search query, just use the online location filter
+        query.location = onlineLocationFilter.location;
+      }
+  
+    }
+
     const events = await Event.find(query)
       .populate('organizer', 'name email college')
       .sort({ createdAt: -1 });
@@ -139,7 +182,7 @@ exports.getAllEvents = async (req, res) => {
     res.json({
       success: true,
       count: events.length,
-      events
+      data: events
     });
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -287,7 +330,7 @@ exports.updateEvent = async (req, res) => {
 // Publish event
 exports.publishEvent = async (req, res) => {
   try {
-    console.log('publishEvent: req.user._id:', req.user?._id);
+
     const event = await Event.findById(req.params.id);
     if (!event) {
       return res.status(404).json({
@@ -295,7 +338,7 @@ exports.publishEvent = async (req, res) => {
         message: 'Event not found'
       });
     }
-    console.log('publishEvent: event.organizer:', event.organizer);
+
 
     // Check if user is the organizer
     if (event.organizer.toString() !== req.user._id.toString()) {
@@ -343,6 +386,12 @@ exports.deleteEvent = async (req, res) => {
     }
 
     await Event.findByIdAndDelete(req.params.id);
+
+    // Remove tickets for this event from all users
+    await User.updateMany(
+      {},
+      { $pull: { tickets: { eventId: event._id } } }
+    );
 
     res.json({
       success: true,
@@ -420,6 +469,55 @@ exports.getUserRegisteredEvents = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching registered events'
+    });
+  }
+};
+
+// Utility: Calculate interest match percent
+function getInterestMatchPercent(userInterests, eventInterests) {
+  if (!userInterests || !eventInterests || eventInterests.length === 0) return 0;
+  const matches = eventInterests.filter(i => userInterests.includes(i));
+  return (matches.length / eventInterests.length) * 100;
+}
+
+// Utility: Calculate distance (Haversine)
+function getDistanceKm([lng1, lat1], [lng2, lat2]) {
+  function toRad(x) { return x * Math.PI / 180; }
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Utility: Send email
+async function sendEventEmail(user, event) {
+  await mailer.sendEventNotificationEmail(user, event);
+}
+
+// Debug endpoint to list all events with locations
+exports.debugEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ published: true })
+      .select('title location category published')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: events.length,
+      events: events.map(e => ({
+        id: e._id,
+        title: e.title,
+        location: e.location,
+        category: e.category,
+        published: e.published
+      }))
+    });
+  } catch (error) {
+    console.error('Error in debug endpoint:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching debug info'
     });
   }
 };

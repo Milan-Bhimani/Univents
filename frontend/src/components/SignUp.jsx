@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../services/authservice";
 import { generateOTP, verifyOTP } from '../services/otpService';
@@ -39,11 +39,8 @@ const SignUp = () => {
     try {
       if (!otpSent) {
         const response = await signup(formData.name, formData.email, formData.password);
-        console.log('Signup response:', response);
-
         if (response.success) {
           const otpResult = await generateOTP(formData.email);
-          console.log('OTP generation result:', otpResult);
 
           if (otpResult.success) {
             setOtpSent(true);
@@ -61,7 +58,6 @@ const SignUp = () => {
         }
 
         const verifyResult = await verifyOTP(formData.email, otp);
-        console.log('Full OTP verification response:', verifyResult);
 
         if (!verifyResult || !verifyResult.success || !verifyResult.data) {
           throw new Error('Invalid response format from server');
@@ -74,16 +70,13 @@ const SignUp = () => {
         }
 
         localStorage.setItem('token', token);
-        console.log('Token successfully stored in localStorage');
         
         if (user && typeof user === 'object') {
           localStorage.setItem('user', JSON.stringify(user));
-          console.log('User data stored in localStorage');
         }
 
         setSuccess('Registration successful!');
         setTimeout(() => {
-          console.log('Navigating to home page...');
           navigate('/home');
         }, 500);
       }

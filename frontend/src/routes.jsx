@@ -17,12 +17,19 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import SecurityPage from './components/SecurityPage';
 import AccountSettings from './components/AccountSettings';
-import WorkshopsPage from './components/WorkshopsPage';
-import HackathonsPage from './components/HackathonsPage';
-import SeminarsPage from './components/SeminarsPage';
 import ForgotPassword from './components/ForgotPassword';
 import EventHistory from './components/EventHistory';
 import TicketHistory from './components/TicketHistory';
+import OnlineEventsPage from './components/OnlineEventsPage';
+import AllEventsPage from './components/AllEventsPage';
+import HackathonsPage from './components/HackathonsPage';
+import SeminarsPage from './components/SeminarsPage';
+import WorkshopsPage from './components/WorkshopsPage';
+import ConferencesPage from './components/ConferencesPage';
+import NetworkingPage from './components/NetworkingPage';
+import CompetitionsPage from './components/CompetitionsPage';
+import ScrollToTop from './components/ScrollToTop';
+import MockPaymentPage from './components/MockPaymentPage';
 
 const Layout = () => {
   const location = useLocation();
@@ -32,6 +39,7 @@ const Layout = () => {
   return (
     <>
       {shouldShowNavbar && <Navbar />}
+      <ScrollToTop />
       <div className={shouldShowNavbar ? "pt-20" : ""}>
         <Outlet />
       </div>
@@ -95,16 +103,36 @@ const router = createBrowserRouter([{
       element: <ProtectedRoute><Outlet /></ProtectedRoute>,
       children: [
         {
-          path: 'workshops',
-          element: <WorkshopsPage />
+          path: '',
+          element: <ProtectedRoute><AllEventsPage /></ProtectedRoute>
         },
         {
           path: 'hackathons',
-          element: <HackathonsPage />
+          element: <ProtectedRoute><HackathonsPage /></ProtectedRoute>
         },
         {
           path: 'seminars',
-          element: <SeminarsPage />
+          element: <ProtectedRoute><SeminarsPage /></ProtectedRoute>
+        },
+        {
+          path: 'workshops',
+          element: <ProtectedRoute><WorkshopsPage /></ProtectedRoute>
+        },
+        {
+          path: 'conferences',
+          element: <ProtectedRoute><ConferencesPage /></ProtectedRoute>
+        },
+        {
+          path: 'networking',
+          element: <ProtectedRoute><NetworkingPage /></ProtectedRoute>
+        },
+        {
+          path: 'competitions',
+          element: <ProtectedRoute><CompetitionsPage /></ProtectedRoute>
+        },
+        {
+          path: 'online',
+          element: <ProtectedRoute><OnlineEventsPage /></ProtectedRoute>
         },
         {
           path: ':id',
@@ -153,6 +181,10 @@ const router = createBrowserRouter([{
     {
       path: '/ticket-history',
       element: <ProtectedRoute><TicketHistory /></ProtectedRoute>
+    },
+    {
+      path: '/mock-payment',
+      element: <MockPaymentPage />
     }
   ]
 }]);

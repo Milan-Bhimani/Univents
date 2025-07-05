@@ -1,26 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD  
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-// Verify transporter
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('SMTP Error:', error);
-  } else {
-    console.log('Server is ready to send emails');
-  }
-});
+const mailer = require('../utils/mailer');
 
 exports.generateOTP = async (req, res) => {
   try {
@@ -51,20 +31,7 @@ exports.generateOTP = async (req, res) => {
 
     // Send email
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'UniVents Login OTP',
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-            <h2 style="color: #333;">UniVents Login Verification</h2>
-            <p>Your OTP for login is: <strong style="font-size: 20px; color: #4a90e2;">${otp}</strong></p>
-            <p>This OTP will expire in 10 minutes.</p>
-            <p>If you didn't request this OTP, please ignore this email.</p>
-          </div>
-        `
-      });
-      console.log('OTP email sent successfully to:', email);
+      await mailer.sendOTPEmail(email, otp);
     } catch (emailError) {
       console.error('Email sending error:', emailError);
       throw new Error('Failed to send OTP email');
@@ -98,14 +65,14 @@ exports.verifyOTP = async (req, res) => {
       .select('+otp +otpExpires +otpAttempts');  // Explicitly select OTP fields
 
     if (!user) {
-      console.log('User not found');
+  
       return res.status(401).json({
         success: false,
         message: 'Invalid email'
       });
     }
 
-    console.log('Found user OTP:', user.otp, 'Expires:', user.otpExpires);
+
 
     // Check for too many attempts
     if (user.otpAttempts >= 5) {
@@ -127,7 +94,7 @@ exports.verifyOTP = async (req, res) => {
     }
 
     if (user.otpExpires < Date.now()) {
-      console.log('OTP expired');
+  
       return res.status(401).json({
         success: false,
         message: 'OTP has expired'
@@ -146,7 +113,7 @@ exports.verifyOTP = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
-    console.log('OTP verification successful, token generated');
+
 
     // Remove sensitive data
     user.password = undefined;

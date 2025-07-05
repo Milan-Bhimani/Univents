@@ -20,8 +20,16 @@ const eventIcon = new L.Icon({
   popupAnchor: [0, -30]
 });
 
-const MapComponent = ({ events = [], userLocation, height = '400px' }) => {
+const MapComponent = ({ events = [], userLocation, center, height = '400px' }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const hasValidCenter =
+    Array.isArray(center) &&
+    center.length === 2 &&
+    typeof center[0] === 'number' &&
+    typeof center[1] === 'number' &&
+    !isNaN(center[0]) &&
+    !isNaN(center[1]);
+
   const hasValidUserLocation =
     userLocation &&
     typeof userLocation.latitude === 'number' &&
@@ -29,7 +37,9 @@ const MapComponent = ({ events = [], userLocation, height = '400px' }) => {
     !isNaN(userLocation.latitude) &&
     !isNaN(userLocation.longitude);
 
-  const defaultPosition = hasValidUserLocation
+  const defaultPosition = hasValidCenter
+    ? center
+    : hasValidUserLocation
     ? [userLocation.latitude, userLocation.longitude]
     : [40.7128, -74.0060]; // Default to NYC
 

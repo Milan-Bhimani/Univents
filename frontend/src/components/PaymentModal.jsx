@@ -126,39 +126,110 @@ const CheckoutForm = ({ amount, eventTitle, onSuccess, onCancel }) => {
   );
 };
 
-const PaymentModal = ({ isOpen, onClose, amount, eventTitle, onSuccess }) => {
-  if (!isOpen) return null;
+const PaymentModal = ({ event, open, onClose, onPaymentSuccess }) => {
+  const [method, setMethod] = useState('upi');
+  const [upi, setUpi] = useState('');
+  const [card, setCard] = useState({ number: '', expiry: '', cvv: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const handleSuccess = (paymentIntent) => {
-    onSuccess(paymentIntent);
-    onClose();
+  if (!open) return null;
+
+  const validateUpi = (value) => /^[\w.-]+@[\w.-]+$/.test(value);
+  const validateCard = (c) =>
+    /^\d{16}$/.test(c.number) &&
+    /^\d{2}\/\d{2}$/.test(c.expiry) &&
+    /^\d{3}$/.test(c.cvv);
+
+  const handlePay = () => {
+    setError('');
+    if (method === 'upi') {
+      if (!validateUpi(upi)) {
+        setError('Invalid UPI ID');
+        return;
+      }
+    } else {
+      if (!validateCard(card)) {
+        setError('Invalid card details');
+        return;
+      }
+    }
+    setSuccess(true);
+    setTimeout(() => {
+      onPaymentSuccess({
+        eventId: event._id,
+        eventTitle: event.title,
+        eventDate: event.date,
+        eventLocation: event.location,
+        method,
+        paidAt: new Date().toISOString(),
+      });
+      onClose();
+    }, 1500);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700/50 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-        >
-          <FiX className="w-6 h-6" />
-        </button>
-
-        <div className="mb-6">
-          <div className="flex items-center mb-4">
-            <FiCreditCard className="w-8 h-8 text-yellow-400 mr-3" />
-            <h2 className="text-2xl font-bold text-white">Payment Details</h2>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-gray-900 text-white rounded-xl p-8 w-full max-w-md shadow-lg relative">
+        <button onClick={onClose} className="absolute top-2 right-4 text-2xl">&times;</button>
+        <h2 className="text-xl font-bold mb-4">Mock Payment</h2>
+        <div className="mb-4">
+          <label className="mr-4">
+            <input type="radio" checked={method === 'upi'} onChange={() => setMethod('upi')} /> UPI
+          </label>
+          <label>
+            <input type="radio" checked={method === 'card'} onChange={() => setMethod('card')} /> Card
+          </label>
         </div>
-
-        <Elements stripe={stripePromise}>
-          <CheckoutForm
-            amount={amount}
-            eventTitle={eventTitle}
-            onSuccess={handleSuccess}
-            onCancel={onClose}
+        {method === 'upi' ? (
+          <input
+            type="text"
+            placeholder="Enter UPI ID (e.g. name@bank)"
+            value={upi}
+            onChange={e => setUpi(e.target.value)}
+            className="w-full p-3 rounded bg-gray-800 mb-3"
           />
-        </Elements>
+        ) : (
+          <div className="space-y-2 mb-3">
+            <input
+              type="text"
+              placeholder="Card Number (16 digits)"
+              value={card.number}
+              onChange={e => setCard({ ...card, number: e.target.value })}
+              className="w-full p-3 rounded bg-gray-800"
+              maxLength={16}
+            />
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="MM/YY"
+                value={card.expiry}
+                onChange={e => setCard({ ...card, expiry: e.target.value })}
+                className="w-1/2 p-3 rounded bg-gray-800"
+                maxLength={5}
+              />
+              <input
+                type="text"
+                placeholder="CVV"
+                value={card.cvv}
+                onChange={e => setCard({ ...card, cvv: e.target.value })}
+                className="w-1/2 p-3 rounded bg-gray-800"
+                maxLength={3}
+              />
+            </div>
+          </div>
+        )}
+        {error && <div className="text-red-400 mb-2">{error}</div>}
+        {success ? (
+          <div className="text-green-400 font-bold text-center py-4">Payment Successful!</div>
+        ) : (
+          <button
+            onClick={handlePay}
+            className="w-full bg-yellow-400 text-gray-900 font-semibold py-3 rounded-xl hover:bg-yellow-500 transition"
+          >
+            Confirm & Get Ticket
+          </button>
+        )}
       </div>
     </div>
   );

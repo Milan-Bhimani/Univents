@@ -6,6 +6,8 @@ exports.getNearbyEvents = async (req, res) => {
   try {
     const { longitude, latitude, maxDistance = 25000 } = req.query;
     
+    
+
     if (!longitude || !latitude) {
       return res.status(400).json({
         success: false,
@@ -13,7 +15,7 @@ exports.getNearbyEvents = async (req, res) => {
       });
     }
 
-    const events = await Event.find({
+    const geoQuery = {
       coordinates: {
         $near: {
           $geometry: {
@@ -23,9 +25,12 @@ exports.getNearbyEvents = async (req, res) => {
           $maxDistance: parseInt(maxDistance)
         }
       },
-      date: { $gte: new Date() }, // Only future events
+      date: { $gte: new Date() },
       published: true
-    }).populate('organizer', 'name email college');
+    };
+
+
+    const events = await Event.find(geoQuery).populate('organizer', 'name email college');
 
     // Add distance calculation to each event
     const eventsWithDistance = events.map(event => {
@@ -182,13 +187,27 @@ exports.updateUserLocation = async (req, res) => {
       });
     }
 
+    // Reverse geocode using OpenStreetMap Nominatim
+    let addressString = '';
+    try {
+      const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+      const response = await fetch(nominatimUrl, { headers: { 'User-Agent': 'UniVents/1.0' } });
+      const data = await response.json();
+      if (data && data.display_name) {
+        addressString = data.display_name;
+      }
+    } catch (geoErr) {
+      console.error('Reverse geocoding failed:', geoErr);
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
         location: {
           type: 'Point',
           coordinates: [parseFloat(longitude), parseFloat(latitude)]
-        }
+        },
+        address: addressString || undefined
       },
       { new: true, runValidators: true }
     );
@@ -197,7 +216,8 @@ exports.updateUserLocation = async (req, res) => {
       success: true,
       message: 'Location updated successfully',
       data: {
-        location: user.location
+        location: user.location,
+        address: user.address
       }
     });
   } catch (error) {

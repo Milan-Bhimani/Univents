@@ -11,7 +11,8 @@ const EditProfile = () => {
     phone: '',
     college: '',
     address: '',
-    tags: []
+    tags: [],
+    location: null
   });
 
   const availableTags = [
@@ -28,10 +29,32 @@ const EditProfile = () => {
         phone: user.phone || '',
         college: user.college || '',
         address: user.address || '',
-        tags: user.tags || []
+        tags: user.tags || [],
+        location: user.location || null
       });
     }
   }, []);
+
+  const handleDetectLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            location: {
+              type: 'Point',
+              coordinates: [position.coords.longitude, position.coords.latitude]
+            }
+          }));
+        },
+        (error) => {
+          setError('Unable to detect location.');
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by your browser.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -152,6 +175,27 @@ const EditProfile = () => {
                   {tag.charAt(0).toUpperCase() + tag.slice(1)}
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-yellow-400/90 font-medium">Location</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                name="location"
+                value={formData.location ? `${formData.location.coordinates[1]}, ${formData.location.coordinates[0]}` : ''}
+                readOnly
+                className="w-full bg-gray-800/50 border border-gray-700 px-4 py-3 rounded-xl text-white"
+                placeholder="Latitude, Longitude"
+              />
+              <button
+                type="button"
+                onClick={handleDetectLocation}
+                className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-xl font-semibold hover:bg-yellow-500 transition-all"
+              >
+                Detect My Location
+              </button>
             </div>
           </div>
 

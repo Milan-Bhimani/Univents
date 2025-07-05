@@ -143,29 +143,79 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <Link
-              to="/profile/edit"
-              className="flex items-center space-x-3 p-6 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all group"
-            >
-              <FiEdit2 className="text-yellow-400 group-hover:scale-110 transition-transform" />
-              <div>
-                <h3 className="text-lg font-semibold text-yellow-400 mb-2">Edit Profile</h3>
-                <p className="text-gray-400">Update your personal information</p>
-              </div>
-            </Link>
-
-            <Link
-              to="/security"
-              className="flex items-center space-x-3 p-6 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-all group"
-            >
-              <FiLock className="text-yellow-400 group-hover:scale-110 transition-transform" />
-              <div>
-                <h3 className="text-lg font-semibold text-yellow-400 mb-2">Security</h3>
-                <p className="text-gray-400">Manage email and password</p>
-              </div>
-            </Link>
+          <div className="flex flex-col items-center mt-8">
+            <div className="w-full max-w-md">
+              <button
+                onClick={() => navigate('/profile/edit')}
+                className="w-full btn-primary flex items-center justify-center gap-2 mb-4"
+              >
+                <span>Edit Profile</span>
+              </button>
+              
+              {/* Cleanup orphaned tickets button */}
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('http://localhost:5000/api/users/cleanup-tickets', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                      alert(data.message);
+                      window.location.reload();
+                    } else {
+                      alert('Error: ' + data.message);
+                    }
+                  } catch (error) {
+                    alert('Error cleaning up tickets: ' + error.message);
+                  }
+                }}
+                className="w-full bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl py-3 px-6 font-semibold hover:bg-red-500/30 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <span>Clean Up Orphaned Tickets</span>
+              </button>
+            </div>
           </div>
+
+          {/* Your Tickets Section */}
+          {user.tickets && user.tickets.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-2xl font-bold text-yellow-400 mb-4">Your Tickets</h2>
+              <div className="space-y-4">
+                {user.tickets.map((ticket) => (
+                  <div key={ticket._id || ticket.eventId} className="bg-gray-700/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="text-lg font-semibold text-white">{ticket.eventTitle}</div>
+                      <div className="text-gray-400 text-sm">{ticket.eventLocation}</div>
+                      <div className="text-gray-400 text-sm">{new Date(ticket.eventDate).toLocaleString()}</div>
+                      <div className="text-gray-400 text-sm">Method: {ticket.method}</div>
+                    </div>
+                    <div className="mt-2 md:mt-0 flex items-center gap-4">
+                      <button
+                        onClick={async () => {
+                          const token = localStorage.getItem('token');
+                          const res = await fetch(`http://localhost:5000/api/users/tickets/${ticket._id}/reminder`, {
+                            method: 'PUT',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                          if (res.ok) window.location.reload();
+                        }}
+                        className={`px-4 py-2 rounded font-semibold transition ${ticket.reminder ? 'bg-green-500/20 text-green-400' : 'bg-yellow-400/20 text-yellow-400'}`}
+                      >
+                        {ticket.reminder ? 'Reminder On' : 'Set Reminder'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

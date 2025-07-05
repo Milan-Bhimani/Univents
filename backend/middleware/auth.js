@@ -39,7 +39,7 @@ const protect = async (req, res, next) => {
 
     // Find user
     const user = await User.findById(decoded.id).select('-password');
-    console.log('Found user:', user); // Debug log
+
 
     if (!user) {
       return res.status(401).json({

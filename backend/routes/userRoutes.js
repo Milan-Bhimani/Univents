@@ -48,6 +48,28 @@ router.get('/profile', async (req, res) => {
       });
     }
 
+    // Automatically clean up orphaned tickets
+    if (user.tickets && user.tickets.length > 0) {
+      const validTickets = [];
+      let orphanedCount = 0;
+      
+      for (const ticket of user.tickets) {
+        const eventExists = await require('../models/Event').findById(ticket.eventId);
+        if (eventExists) {
+          validTickets.push(ticket);
+        } else {
+          orphanedCount++;
+        }
+      }
+      
+      // Update user with only valid tickets if any were orphaned
+      if (orphanedCount > 0) {
+        await User.findByIdAndUpdate(user._id, { tickets: validTickets });
+        user.tickets = validTickets; // Update the response data
+  
+      }
+    }
+
     res.json({
       success: true,
       message: 'User profile retrieved successfully',
@@ -65,7 +87,7 @@ router.get('/profile', async (req, res) => {
 // Update user profile
 router.put('/profile', async (req, res) => {
   try {
-    const { name, phone, address, college, tags } = req.body;
+    const { name, phone, address, college, tags, location } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!name) {
@@ -88,6 +110,7 @@ router.put('/profile', async (req, res) => {
     user.address = address;
     user.college = college;
     if (tags !== undefined) user.tags = tags;
+    if (location !== undefined) user.location = location;
 
     const updatedUser = await user.save();
 
@@ -101,7 +124,8 @@ router.put('/profile', async (req, res) => {
         phone: updatedUser.phone,
         address: updatedUser.address,
         college: updatedUser.college,
-        tags: updatedUser.tags
+        tags: updatedUser.tags,
+        location: updatedUser.location
       }
     });
   } catch (error) {
@@ -198,7 +222,84 @@ router.put('/change-password', async (req, res) => {
   }
 });
 
+// Add a ticket to the user's tickets array
+router.post('/tickets', async (req, res) => {
+  try {
+    const { eventId, eventTitle, eventDate, eventLocation, method, paidAt } = req.body;
+    if (!eventId || !eventTitle || !eventDate) {
+      return res.status(400).json({ success: false, message: 'Missing ticket details' });
+    }
+    const user = await User.findById(req.user._id);
+    const event = await require('../models/Event').findById(eventId);
+    if (event && event.organizer.toString() === req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Organizers cannot buy tickets for their own events.' });
+    }
+    user.tickets.push({ eventId, eventTitle, eventDate, eventLocation, method, paidAt });
+    await user.save();
+    res.status(200).json({ success: true, message: 'Ticket added', tickets: user.tickets });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Toggle reminder for a ticket
+router.put('/tickets/:ticketId/reminder', async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const user = await User.findById(req.user._id);
+    const ticket = user.tickets.id(ticketId);
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+    ticket.reminder = !ticket.reminder;
+    await user.save();
+    res.status(200).json({ success: true, message: 'Reminder updated', ticket });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Debug route - add before module.exports
+
+// Clean up orphaned tickets (admin only)
+router.post('/cleanup-tickets', async (req, res) => {
+  try {
+    const users = await User.find({ 'tickets.0': { $exists: true } });
+    let totalOrphanedTickets = 0;
+    
+    for (const user of users) {
+      const originalTicketCount = user.tickets.length;
+      
+      // Filter out tickets where the event no longer exists
+      const validTickets = [];
+      for (const ticket of user.tickets) {
+        const eventExists = await require('../models/Event').findById(ticket.eventId);
+        if (eventExists) {
+          validTickets.push(ticket);
+        } else {
+          totalOrphanedTickets++;
+        }
+      }
+      
+      // Update user with only valid tickets
+      if (validTickets.length !== originalTicketCount) {
+        await User.findByIdAndUpdate(user._id, { tickets: validTickets });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Cleanup complete! Removed ${totalOrphanedTickets} orphaned tickets`
+    });
+    
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error during cleanup'
+    });
+  }
+});
 
 
 module.exports = router;

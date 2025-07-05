@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiStar, FiCalendar, FiMapPin, FiUsers, FiHeart } from 'react-icons/fi';
+import { FaStar, FaHeart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import EventCard from './EventCard';
 
 const RecommendedEvents = () => {
   const [recommendations, setRecommendations] = useState([]);
@@ -62,99 +62,30 @@ const RecommendedEvents = () => {
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-lg border border-gray-700/30">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-yellow-400 flex items-center">
-          <FiStar className="mr-2" />
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-2 flex items-center justify-center gap-3">
+          <FaStar className="inline-block text-2xl text-yellow-400" />
           Recommended for You
-        </h3>
-        <span className="text-sm text-gray-400">
-          {recommendations.length} personalized recommendations
-        </span>
+        </h1>
+        <p className="text-gray-400 text-lg">
+          Personalized event picks based on your interests and activity.
+        </p>
       </div>
-
       {recommendations.length === 0 ? (
         <div className="text-center py-8">
-          <FiHeart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <FaHeart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400">No recommendations available yet</p>
           <p className="text-sm text-gray-500 mt-2">
             Register for some events to get personalized recommendations
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendations.slice(0, 5).map((recommendation, index) => (
-            <motion.div
-              key={recommendation.event._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-gray-700/30 rounded-lg p-4 hover:bg-gray-700/50 transition-all group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-lg font-semibold text-white group-hover:text-yellow-400 transition-colors">
-                      {recommendation.event.title}
-                    </h4>
-                    <div className="flex items-center bg-yellow-400/20 text-yellow-400 px-2 py-1 rounded-full text-xs">
-                      <FiStar className="w-3 h-3 mr-1" />
-                      {Math.round(recommendation.score)}% match
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                    {recommendation.event.description}
-                  </p>
-                  
-                  {recommendation.reasons && recommendation.reasons.length > 0 && (
-                    <p className="text-yellow-400/80 text-xs mt-2 italic">
-                      {recommendation.reasons[0]}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center space-x-4 mt-3 text-sm text-gray-400">
-                    <div className="flex items-center">
-                      <FiCalendar className="w-4 h-4 mr-1" />
-                      {new Date(recommendation.event.date).toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center">
-                      <FiMapPin className="w-4 h-4 mr-1" />
-                      {recommendation.event.location}
-                    </div>
-                    <div className="flex items-center">
-                      <FiUsers className="w-4 h-4 mr-1" />
-                      {recommendation.event.registeredParticipants?.length || 0} registered
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center space-x-2">
-                      {recommendation.event.category && (
-                        <span className="bg-gray-600/50 text-gray-300 px-2 py-1 rounded-full text-xs">
-                          {recommendation.event.category}
-                        </span>
-                      )}
-                      {recommendation.event.difficulty && (
-                        <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs">
-                          {recommendation.event.difficulty}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <Link
-                      to={`/events/${recommendation.event._id}`}
-                      className="text-yellow-400 hover:text-yellow-300 text-sm font-medium transition-colors"
-                    >
-                      View Details →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            <EventCard key={recommendation.event._id} event={recommendation.event} index={index} />
           ))}
         </div>
       )}
-
       {recommendations.length > 5 && (
         <div className="mt-6 text-center">
           <Link

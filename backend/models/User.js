@@ -178,7 +178,23 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     select: false
-  }
+  },
+  tickets: [{
+    eventId: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Event',
+      required: true
+    },
+    eventTitle: String,
+    eventDate: Date,
+    eventLocation: String,
+    method: String,
+    paidAt: Date,
+    reminder: {
+      type: Boolean,
+      default: false
+    }
+  }]
 });
 
 // Create geospatial index for location-based queries

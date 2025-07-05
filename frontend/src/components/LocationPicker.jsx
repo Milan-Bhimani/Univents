@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { FiMapPin, FiSearch } from 'react-icons/fi';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -13,7 +13,7 @@ const markerIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-function LocationMarker({ onLocationSelect, selectedLocation }) {
+function LocationMarker({ onLocationSelect, selectedLocation, setSelectedLocation }) {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
@@ -21,6 +21,7 @@ function LocationMarker({ onLocationSelect, selectedLocation }) {
       fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
         .then(res => res.json())
         .then(data => {
+          setSelectedLocation([lat, lng]);
           onLocationSelect({
             coordinates: [lng, lat],
             address: data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
@@ -32,6 +33,16 @@ function LocationMarker({ onLocationSelect, selectedLocation }) {
   return selectedLocation ? (
     <Marker position={selectedLocation} icon={markerIcon} />
   ) : null;
+}
+
+function MapCenterer({ center }) {
+  const map = useMap();
+  React.useEffect(() => {
+    if (center && Array.isArray(center) && center.length === 2) {
+      map.setView(center, map.getZoom());
+    }
+  }, [center, map]);
+  return null;
 }
 
 const LocationPicker = ({ onLocationSelect, initialLocation, className = '' }) => {
@@ -98,16 +109,15 @@ const LocationPicker = ({ onLocationSelect, initialLocation, className = '' }) =
       {/* Map */}
       <div className="rounded-lg overflow-hidden border border-gray-700">
         <MapContainer center={defaultCenter} zoom={selectedLocation ? 15 : 10} style={{ height: '300px', width: '100%' }}>
+          <MapCenterer center={selectedLocation} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
           />
           <LocationMarker
-            onLocationSelect={(loc) => {
-              setSelectedLocation([loc.coordinates[1], loc.coordinates[0]]);
-              onLocationSelect(loc);
-            }}
+            onLocationSelect={onLocationSelect}
             selectedLocation={selectedLocation}
+            setSelectedLocation={setSelectedLocation}
           />
         </MapContainer>
       </div>

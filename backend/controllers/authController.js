@@ -6,16 +6,12 @@ const passport = require('passport');
 // Simplify token generation
 const signToken = (id) => {
   try {
-    console.log('Generating token for id:', id);
-    console.log('JWT_SECRET:', process.env.JWT_SECRET);
-    
     const token = jwt.sign(
       { id: id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
     
-    console.log('Token generated:', token ? 'Success' : 'Failed');
     return token;
   } catch (error) {
     console.error('Token generation error:', error);
@@ -26,7 +22,7 @@ const signToken = (id) => {
 exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    console.log('Signup attempt for email:', email);
+
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -38,7 +34,6 @@ exports.signup = async (req, res) => {
 
     const user = await User.create({ name, email, password });
     const token = signToken(user._id);
-    console.log('Generated signup token:', token ? 'Success' : 'Failed');
 
     user.password = undefined;
 
@@ -62,10 +57,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Login request body:', req.body);
 
     const user = await User.findOne({ email }).select('+password');
-    console.log('Found user:', { userId: user?._id, email: user?.email });
     
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
@@ -106,15 +99,10 @@ exports.getProfile = async (req, res) => {
 
 exports.protect = async (req, res, next) => {
   try {
-    console.log('Protect middleware - all headers:', req.headers);
-    console.log('Auth header:', req.headers.authorization);
-    
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-      console.log('Extracted token:', token?.substring(0, 20) + '...');
     }
-    console.log('Token received:', token ? 'Yes' : 'No');
 
     if (!token) {
       return res.status(401).json({
@@ -166,21 +154,8 @@ exports.forgotPassword = async (req, res) => {
     user.otpAttempts = 0;
     await user.save();
     // Send OTP email
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      },
-      tls: { rejectUnauthorized: false }
-    });
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'UniVents Password Reset OTP',
-      html: `<div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;"><h2 style="color: #333;">UniVents Password Reset</h2><p>Your OTP for password reset is: <strong style="font-size: 20px; color: #4a90e2;">${otp}</strong></p><p>This OTP will expire in 10 minutes.</p></div>`
-    });
+    const mailer = require('../utils/mailer');
+    await mailer.sendPasswordResetEmail(email, otp);
     return res.status(200).json({ success: true, message: 'If this email is registered, you will receive an OTP.' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to send OTP' });

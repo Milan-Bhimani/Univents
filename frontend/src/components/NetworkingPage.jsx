@@ -1,23 +1,23 @@
 import { motion } from 'framer-motion';
-import { FaChalkboardTeacher } from 'react-icons/fa';
+import { FaHandshake } from 'react-icons/fa';
 import EventList from './EventList';
 import BackButton from './BackButton';
 
-export default function SeminarsPage() {
+export default function NetworkingPage() {
   return (
     <div className="min-h-screen bg-gray-900 p-6 pt-20">
       <BackButton />
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-yellow-400 mb-2 flex items-center justify-center gap-3">
-            <FaChalkboardTeacher className="inline-block text-3xl text-yellow-400" />
-            Seminars
+            <FaHandshake className="inline-block text-3xl text-yellow-400" />
+            Networking
           </h1>
           <p className="text-gray-400 text-lg">
-            Discover upcoming seminars and expand your knowledge through expert-led sessions.
+            Discover networking events and grow your professional connections.
           </p>
         </div>
-        <EventList eventType="seminar" hideCreateButton />
+        <EventList eventType="networking" hideCreateButton />
       </div>
     </div>
   );
