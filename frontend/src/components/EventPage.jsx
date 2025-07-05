@@ -3,7 +3,6 @@ import { IoCalendarOutline, IoLocationOutline, IoTimeOutline } from "react-icons
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import BackButton from './BackButton';
-import PaymentModal from './PaymentModal';
 import MapComponent from './MapComponent';
 import { getEventImage } from '../utils/eventImages';
 
@@ -13,10 +12,6 @@ export default function EventPage() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [purchaseError, setPurchaseError] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -88,34 +83,13 @@ export default function EventPage() {
   };
 
   const handleBuyTickets = (ticket) => {
-    setSelectedTicket(ticket);
-    setShowPaymentModal(true);
-  };
-
-  const handleRegisterWithPayment = () => {
-    setShowPaymentModal(true);
-  };
-
-  const handlePaymentSuccess = async (ticketDetails) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...ticketDetails
-        })
-      });
-      if (response.ok) {
-        alert('Ticket confirmed! Check your profile for your ticket.');
-        setShowPaymentModal(false);
+    // Redirect to mock payment page with event and ticket data
+    navigate('/mock-payment', { 
+      state: { 
+        event: event,
+        ticket: ticket
       }
-    } catch (error) {
-      alert('Error confirming ticket.');
-    }
+    });
   };
 
   const handleFreeRegister = async () => {
@@ -183,274 +157,130 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center p-6 pt-20">
       <BackButton />
       <div className="w-full max-w-6xl">
-        <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700 mt-4">
+        <div className="bg-gray-800/40 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-gray-700 mt-8 mb-12 p-0 md:p-0">
           {/* Event Image */}
-          <div className="relative h-96 overflow-hidden">
+          <div className="relative h-80 md:h-96 overflow-hidden rounded-t-3xl">
             <img 
               src={getEventImage(event.category)}
               alt="Event Cover" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-gray-900 opacity-90"></div>
             <div className="absolute top-4 left-4">
-              <span className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-semibold">
+              <span className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-4 py-2 rounded-full font-bold text-base shadow-lg">
                 {event.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Event'}
               </span>
             </div>
           </div>
-
-          {/* Event Details */}
-          <div className="p-8 -mt-20 relative">
-            <h2 className="text-4xl font-bold text-white mb-4">{event.title}</h2>
-            <p className="text-gray-300 text-lg mb-6">
-              {event.description}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="flex items-center space-x-3 bg-gray-700 p-4 rounded-lg">
-                <IoCalendarOutline className="text-2xl text-yellow-400" />
-                <div>
-                  <div className="text-gray-400 text-sm">Date</div>
-                  <div className="text-white">{new Date(event.date).toLocaleDateString()}</div>
+          <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10">
+            <div className="flex-1">
+              <h1 className="text-5xl font-black text-yellow-400 mb-6 drop-shadow-lg tracking-wide">
+                {event.title}
+              </h1>
+              <div className="flex flex-wrap gap-6 mb-8 text-lg text-gray-300">
+                <div className="flex items-center gap-2">
+                  <IoCalendarOutline className="text-yellow-400 text-2xl" />
+                  <span>{new Date(event.date).toLocaleDateString()} {event.time && `| ${event.time}`}</span>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3 bg-gray-700 p-4 rounded-lg">
-                <IoTimeOutline className="text-2xl text-yellow-400" />
-                <div>
-                  <div className="text-gray-400 text-sm">Time</div>
-                  <div className="text-white">{event.time}</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 bg-gray-700 p-4 rounded-lg">
-                <IoLocationOutline className="text-2xl text-yellow-400" />
-                <div>
-                  <div className="text-gray-400 text-sm">Location</div>
-                  <div className="text-white">{event.location}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Event Tags and Interests */}
-            {(event.tags && event.tags.length > 0) || (event.interests && event.interests.length > 0) && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-3">Tags & Interests</h3>
-                <div className="flex flex-wrap gap-2">
-                  {event.tags && event.tags.map((tag, index) => (
-                    <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">
-                      {tag}
-                    </span>
-                  ))}
-                  {event.interests && event.interests.map((interest, index) => (
-                    <span key={index} className="bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Difficulty and Prerequisites */}
-            {(event.difficulty || (event.prerequisites && event.prerequisites.length > 0)) && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-3">Event Details</h3>
-                {event.difficulty && (
-                  <div className="mb-2">
-                    <span className="text-gray-400">Difficulty: </span>
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      event.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                      event.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {event.difficulty.charAt(0).toUpperCase() + event.difficulty.slice(1)}
-                    </span>
+                {event.endDate && (
+                  <div className="flex items-center gap-2">
+                    <IoCalendarOutline className="text-yellow-400 text-2xl" />
+                    <span>Ends: {new Date(event.endDate).toLocaleDateString()} {event.endTime && `| ${event.endTime}`}</span>
                   </div>
                 )}
-                {event.prerequisites && event.prerequisites.length > 0 && (
-                  <div>
-                    <span className="text-gray-400">Prerequisites: </span>
-                    <span className="text-gray-300">{event.prerequisites.join(', ')}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <IoLocationOutline className="text-yellow-400 text-2xl" />
+                  <span>{event.location}</span>
+                </div>
               </div>
-            )}
-
-            {/* Ticketing Information */}
-            {event.isTicketed && event.tickets && event.tickets.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-3">Available Tickets</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {event.tickets.map((ticket, index) => (
-                    <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="text-white font-semibold">{ticket.name}</h4>
-                          {ticket.description && (
-                            <p className="text-gray-400 text-sm">{ticket.description}</p>
-                          )}
+              <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-2xl">
+                {event.description}
+              </p>
+              <div className="flex flex-wrap gap-4 mb-8">
+                {event.tags && event.tags.map((tag, idx) => (
+                  <span key={idx} className="bg-yellow-400/10 text-yellow-400 font-semibold text-xs px-3 py-1 rounded-full">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+              {event.isTicketed && event.tickets && event.tickets.length > 0 ? (
+                <div className="mt-8">
+                  <h2 className="text-2xl font-bold text-yellow-400 mb-4">Tickets</h2>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {event.tickets.map((ticket, idx) => (
+                      <div key={idx} className="bg-gray-900/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/30 shadow hover:border-yellow-400/60 transition-all duration-200 flex flex-col gap-2">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-lg font-bold text-yellow-400">{ticket.name}</span>
+                          <span className="text-base font-semibold text-gray-200">{ticket.price === 0 ? 'Free' : `₹${ticket.price}`}</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-yellow-400 font-bold text-lg">
-                            {ticket.price ? `₹${ticket.price}` : 'Free'}
+                        <p className="text-gray-400 text-sm mb-2">{ticket.description}</p>
+                        <span className="text-xs text-gray-400">Available: {ticket.availableQuantity} / {ticket.quantity}</span>
+                        {currentUserId && event.organizer && currentUserId === event.organizer._id ? (
+                          <div className="mt-3 px-6 py-2 bg-gray-600 text-gray-300 font-bold rounded-lg text-center">
+                            You are the organizer
                           </div>
-                          <div className="text-gray-400 text-sm">
-                            {ticket.availableQuantity || 0} available
-                          </div>
-                        </div>
+                        ) : (
+                          <button
+                            onClick={() => handleBuyTickets(ticket)}
+                            className="mt-3 px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 font-bold rounded-lg shadow hover:from-yellow-500 hover:to-yellow-600 transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+                          >
+                            Buy Ticket
+                          </button>
+                        )}
                       </div>
-                      {ticket.price > 0 && (
-                        <button
-                          onClick={() => handleBuyTickets(ticket)}
-                          className="w-full bg-yellow-400 text-gray-900 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition-colors"
-                        >
-                          Buy Ticket
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Registration Stats */}
-            <div className="flex flex-wrap gap-4 mb-8">
-              <div className="flex items-center space-x-2 text-gray-400">
-                <IoCalendarOutline className="text-xl" />
-                <span>Created {new Date(event.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <span>{event.registeredParticipants?.length || 0} registered</span>
-              </div>
-              {event.views && (
-                <div className="flex items-center space-x-2 text-gray-400">
-                  <span>{event.views} views</span>
-                </div>
+              ) : (
+                currentUserId && event.organizer && currentUserId === event.organizer._id ? (
+                  <div className="mt-8 px-8 py-3 bg-gray-700/70 text-gray-300 font-bold rounded-2xl text-center">
+                    You are the organizer of this event
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleFreeRegister}
+                    className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 font-bold rounded-2xl shadow hover:from-yellow-500 hover:to-yellow-600 transition-all text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+                  >
+                    Register for Free
+                  </button>
+                )
               )}
             </div>
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-8 gap-4">
-              {(!currentUserId || !event.organizer || event.organizer._id !== currentUserId) && (
-                <>
-                  {event.isTicketed && event.tickets && event.tickets.length > 0 ? (
-                    event.tickets.length === 1 ? (
-                      <button
-                        onClick={() => navigate('/mock-payment', { state: {
-                          eventId: event._id,
-                          eventTitle: event.title,
-                          ticketId: event.tickets[0]._id,
-                          ticketName: event.tickets[0].name,
-                          ticketPrice: event.tickets[0].price,
-                          ticketQuantity: 1
-                        } })}
-                        className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
-                      >
-                        Register / Get Ticket
-                      </button>
-                    ) : (
-                      <select
-                        onChange={e => {
-                          const t = event.tickets.find(t => t._id === e.target.value);
-                          if (t) {
-                            navigate('/mock-payment', { state: {
-                              eventId: event._id,
-                              eventTitle: event.title,
-                              ticketId: t._id,
-                              ticketName: t.name,
-                              ticketPrice: t.price,
-                              ticketQuantity: 1
-                            } });
-                          }
-                        }}
-                        className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Select Ticket Type</option>
-                        {event.tickets.map(t => (
-                          <option key={t._id} value={t._id}>{t.name} ({t.price ? `₹${t.price}` : 'Free'})</option>
-                        ))}
-                      </select>
-                    )
-                  ) : (
-                    <button
-                      onClick={() => navigate('/mock-payment', { state: { eventId: event._id, eventTitle: event.title } })}
-                      className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-yellow-400 text-gray-900 rounded-xl hover:bg-yellow-500 transition-all"
-                    >
-                      Register / Get Ticket
-                    </button>
-                  )}
-                </>
+            <div className="flex-1 flex flex-col gap-8">
+              <div className="bg-gray-900/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/30 shadow flex flex-col gap-2">
+                <h3 className="text-lg font-bold text-yellow-400 mb-2">Venue & Location</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <FaMapMarkerAlt className="text-yellow-400" />
+                  <span className="text-gray-300">{event.location}</span>
+                </div>
+                {event.address && event.address.city && (
+                  <div className="text-gray-400 text-sm">{event.address.city}, {event.address.state}</div>
+                )}
+                {event.location && event.location.toLowerCase() !== 'online' && event.coordinates && event.coordinates.coordinates && (
+                  <div className="mt-4">
+                    <MapComponent
+                      events={[event]}
+                      userLocation={userLocation}
+                      height="200px"
+                    />
+                  </div>
+                )}
+              </div>
+              {event.organizer && (
+                <div className="bg-gray-900/70 backdrop-blur-lg rounded-2xl p-6 border border-gray-700/30 shadow flex flex-col gap-2">
+                  <h3 className="text-lg font-bold text-yellow-400 mb-2">Organizer</h3>
+                  <div className="text-gray-300 font-semibold">{event.organizer.name}</div>
+                  <div className="text-gray-400 text-sm">{event.organizer.email}</div>
+                  {event.organizer.college && <div className="text-gray-400 text-sm">{event.organizer.college}</div>}
+                </div>
               )}
             </div>
           </div>
-
-          {/* Footer */}
-          {/* <div className="p-8 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <div className="text-center sm:text-left">
-              <h3 className="text-white font-bold mb-1">Organized by</h3>
-              <p className="text-gray-400">{event.organizer?.name || 'Unknown Organizer'}</p>
-              {event.organizer?.college && (
-                <p className="text-gray-500 text-sm">{event.organizer.college}</p>
-              )}
-            </div>
-            
-            <div className="flex space-x-4">
-              {event.isTicketed && event.tickets && event.tickets.some(t => t.price > 0) ? (
-                <button 
-                  onClick={() => handleBuyTickets(event.tickets.find(t => t.price > 0))}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-3 rounded-lg flex items-center space-x-2 transform hover:scale-105 transition-all duration-200"
-                >
-                  <FaTicketAlt />
-                  <span>Buy Tickets</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={handleRegisterForEvent}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-3 rounded-lg flex items-center space-x-2 transform hover:scale-105 transition-all duration-200"
-                >
-                  <span>Register for Free</span>
-                </button>
-              )}
-            </div>
-          </div> */}
-
-          {/* Error Display */}
-          {purchaseError && (
-            <div className="p-4 bg-red-500/10 border-t border-red-500/20 text-red-400">
-              {purchaseError}
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Map Section at the bottom, only for offline events */}
-      {event.location && event.location.toLowerCase() !== 'online' && event.coordinates &&
-        Array.isArray(event.coordinates.coordinates) &&
-        typeof event.coordinates.coordinates[0] === 'number' &&
-        typeof event.coordinates.coordinates[1] === 'number' &&
-        !isNaN(event.coordinates.coordinates[0]) &&
-        !isNaN(event.coordinates.coordinates[1]) && (
-          <div className="mt-12 w-full max-w-4xl">
-            <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center">
-              <FaMapMarkerAlt className="mr-2" />
-              Event Location
-            </h3>
-            <MapComponent
-              coordinates={event.coordinates.coordinates}
-              location={event.location}
-              eventTitle={event.title}
-            />
-          </div>
-      )}
-
-      {/* Payment Modal */}
-      <PaymentModal
-        event={event}
-        open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
     </div>
   );
 }

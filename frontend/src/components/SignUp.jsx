@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../services/authservice";
 import { generateOTP, verifyOTP } from '../services/otpService';
@@ -108,9 +108,12 @@ const SignUp = () => {
       <div className="w-full max-w-5xl flex bg-gray-800/50 backdrop-blur-lg shadow-2xl rounded-2xl overflow-hidden border border-gray-700/30 transform hover:scale-[1.01] transition-all duration-300">
         <div className="w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-yellow-400 p-12 flex flex-col justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent opacity-50"></div>
-          <div className="relative z-10">
-            <img src="/logo.png" alt="UniVents Logo" className="h-24 w-auto mb-6" />
-            <p className="text-2xl font-semibold text-yellow-300/90 leading-relaxed">
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="flex items-center space-x-3 mb-6">
+              <FaRegCalendarAlt className="text-yellow-400 text-4xl drop-shadow-lg" />
+              <span className="text-4xl font-black text-yellow-400 tracking-wider drop-shadow-lg">UniVents</span>
+            </div>
+            <p className="text-2xl font-semibold text-yellow-300/90 leading-relaxed text-center">
               Discover tailored events. <br /> Sign up for personalized recommendations today!
             </p>
             <div className="mt-8 space-y-4">

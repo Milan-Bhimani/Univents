@@ -4,6 +4,7 @@ const User = require('../models/User');
 // Machine Learning-based recommendation system
 exports.getPersonalizedRecommendations = async (req, res) => {
   try {
+    console.log('Starting personalized recommendations for user:', req.user._id);
     const userId = req.user._id;
     const user = await User.findById(userId).populate('eventsRegistered.event');
     
@@ -14,8 +15,10 @@ exports.getPersonalizedRecommendations = async (req, res) => {
       });
     }
 
+    console.log('User found, registered events:', user.eventsRegistered.length);
+
     // Get user's event history for collaborative filtering
-    const userEventHistory = user.eventsRegistered.map(reg => reg.event);
+    const userEventHistory = user.eventsRegistered.map(reg => reg.event).filter(Boolean);
     
     // Get all events for content-based filtering
     const allEvents = await Event.find({
@@ -23,13 +26,30 @@ exports.getPersonalizedRecommendations = async (req, res) => {
       published: true
     }).populate('organizer', 'name email college');
 
-    // Apply multiple recommendation algorithms
-    const recommendations = await Promise.all([
-      getContentBasedRecommendations(user, allEvents),
-      getCollaborativeRecommendations(user, userEventHistory),
-      getPopularityBasedRecommendations(allEvents),
-      getLocationBasedRecommendations(user, allEvents)
-    ]);
+    console.log('Found', allEvents.length, 'published events');
+
+    // Apply multiple recommendation algorithms with error handling
+    const recommendationPromises = [
+      getContentBasedRecommendations(user, allEvents).catch(err => {
+        console.error('Content-based filtering error:', err);
+        return [];
+      }),
+      getCollaborativeRecommendations(user, userEventHistory).catch(err => {
+        console.error('Collaborative filtering error:', err);
+        return [];
+      }),
+      getPopularityBasedRecommendations(allEvents).catch(err => {
+        console.error('Popularity-based filtering error:', err);
+        return [];
+      }),
+      getLocationBasedRecommendations(user, allEvents).catch(err => {
+        console.error('Location-based filtering error:', err);
+        return [];
+      })
+    ];
+
+    const recommendations = await Promise.all(recommendationPromises);
+    console.log('Recommendation counts:', recommendations.map(r => r.length));
 
     // Combine and weight different recommendation sources
     const combinedRecommendations = combineRecommendations(recommendations, {
@@ -42,6 +62,24 @@ exports.getPersonalizedRecommendations = async (req, res) => {
     // Remove duplicates and sort by score
     const uniqueRecommendations = removeDuplicates(combinedRecommendations);
     uniqueRecommendations.sort((a, b) => b.score - a.score);
+
+    console.log('Final unique recommendations:', uniqueRecommendations.length);
+
+    // If no recommendations found, provide fallback recommendations
+    if (uniqueRecommendations.length === 0) {
+      console.log('No recommendations found, providing fallback');
+      const fallbackEvents = allEvents.slice(0, 10).map(event => ({
+        event: event,
+        score: 50,
+        reason: 'Popular events in your area'
+      }));
+      
+      return res.status(200).json({
+        success: true,
+        count: fallbackEvents.length,
+        data: fallbackEvents
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -64,42 +102,47 @@ async function getContentBasedRecommendations(user, events) {
   for (const event of events) {
     let score = 0;
     let reasons = [];
+    let interestPercent = 0;
+    
+    // Convert event to plain object if it's a Mongoose document
+    const eventObj = event.toObject ? event.toObject() : { ...event };
+    
     // Interest matching (40% weight)
-    if (user.interests && event.interests) {
-      const matchingInterests = event.interests.filter(interest => 
+    if (user.interests && eventObj.interests) {
+      const matchingInterests = eventObj.interests.filter(interest => 
         user.interests.includes(interest)
       );
       if (matchingInterests.length > 0) {
         reasons.push('Matched your interests');
       }
-      const interestScore = (matchingInterests.length / Math.max(event.interests.length, 1)) * 40;
-      const interestPercent = (matchingInterests.length / Math.max(event.interests.length, 1)) * 100;
+      const interestScore = (matchingInterests.length / Math.max(eventObj.interests.length, 1)) * 40;
+      interestPercent = (matchingInterests.length / Math.max(eventObj.interests.length, 1)) * 100;
 
       score += interestScore;
-      // Optionally, attach interestPercent to the event for frontend display
-      event._doc.interestPercent = interestPercent;
     }
     // Tag matching (30% weight)
-    if (user.tags && event.tags && user.tags.length > 0 && event.tags.length > 0) {
-      const matchingTags = event.tags.filter(tag => user.tags.includes(tag));
+    if (user.tags && eventObj.tags && user.tags.length > 0 && eventObj.tags.length > 0) {
+      const matchingTags = eventObj.tags.filter(tag => user.tags.includes(tag));
       if (matchingTags.length > 0) {
         reasons.push('Matched your tags');
       }
-      score += (matchingTags.length / Math.max(event.tags.length, 1)) * 30;
+      score += (matchingTags.length / Math.max(eventObj.tags.length, 1)) * 30;
     }
     // Category preference (20% weight)
-    if (user.preferences.eventTypes && user.preferences.eventTypes.includes(event.category)) {
+    if (user.preferences && user.preferences.eventTypes && user.preferences.eventTypes.includes(eventObj.category)) {
       reasons.push('Preferred event type');
       score += 20;
     }
     // Difficulty match (10% weight)
-    if (user.preferences.difficulty && user.preferences.difficulty.includes(event.difficulty)) {
+    if (user.preferences && user.preferences.difficulty && user.preferences.difficulty.includes(eventObj.difficulty)) {
       reasons.push('Preferred difficulty');
       score += 10;
     }
     if (score > 0) {
+      // Add interestPercent to the event object
+      eventObj.interestPercent = interestPercent;
       recommendations.push({
-        event: event,
+        event: eventObj,
         score: score,
         reason: reasons.join(', ') || 'Based on your interests and preferences'
       });
@@ -117,42 +160,48 @@ async function getCollaborativeRecommendations(user, userEventHistory) {
     return recommendations;
   }
 
-  // Find users with similar event preferences
-  const similarUsers = await User.find({
-    _id: { $ne: user._id },
-    'eventsRegistered.event': { $in: userEventHistory.map(e => e._id) }
-  }).populate('eventsRegistered.event');
+  try {
+    // Find users with similar event preferences
+    const similarUsers = await User.find({
+      _id: { $ne: user._id },
+      'eventsRegistered.event': { $in: userEventHistory.map(e => e._id) }
+    }).populate('eventsRegistered.event');
 
-  // Get events attended by similar users
-  const similarUserEvents = new Map();
-  
-  for (const similarUser of similarUsers) {
-    for (const registration of similarUser.eventsRegistered) {
-      const eventId = registration.event._id.toString();
-      const userEventIds = userEventHistory.map(e => e._id.toString());
-      
-      // Skip events the current user has already registered for
-      if (!userEventIds.includes(eventId)) {
-        if (!similarUserEvents.has(eventId)) {
-          similarUserEvents.set(eventId, {
-            event: registration.event,
-            count: 0
-          });
+    // Get events attended by similar users
+    const similarUserEvents = new Map();
+    
+    for (const similarUser of similarUsers) {
+      for (const registration of similarUser.eventsRegistered) {
+        if (!registration.event) continue; // Skip if event is null
+        
+        const eventId = registration.event._id.toString();
+        const userEventIds = userEventHistory.map(e => e._id.toString());
+        
+        // Skip events the current user has already registered for
+        if (!userEventIds.includes(eventId)) {
+          if (!similarUserEvents.has(eventId)) {
+            similarUserEvents.set(eventId, {
+              event: registration.event,
+              count: 0
+            });
+          }
+          similarUserEvents.get(eventId).count++;
         }
-        similarUserEvents.get(eventId).count++;
       }
     }
-  }
 
-  // Convert to recommendations with scores
-  for (const [eventId, data] of similarUserEvents) {
-    if (data.event.date >= new Date() && data.event.published) {
-      recommendations.push({
-        event: data.event,
-        score: data.count * 10, // Weight by number of similar users
-        reason: 'People with similar interests also registered for this'
-      });
+    // Convert to recommendations with scores
+    for (const [eventId, data] of similarUserEvents) {
+      if (data.event.date >= new Date() && data.event.published) {
+        recommendations.push({
+          event: data.event,
+          score: data.count * 10, // Weight by number of similar users
+          reason: 'People with similar interests also registered for this'
+        });
+      }
     }
+  } catch (error) {
+    console.error('Error in collaborative filtering:', error);
   }
   
   return recommendations;

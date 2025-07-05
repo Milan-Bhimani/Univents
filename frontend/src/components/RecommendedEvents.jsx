@@ -15,6 +15,7 @@ const RecommendedEvents = () => {
   const fetchRecommendations = async () => {
     try {
       setLoading(true);
+      setError('');
       const token = localStorage.getItem('token');
       
       const response = await fetch('http://localhost:5000/api/recommendations/personalized', {
@@ -26,12 +27,13 @@ const RecommendedEvents = () => {
       const data = await response.json();
       
       if (data.success) {
-        setRecommendations(data.data);
+        setRecommendations(data.data || []);
       } else {
         throw new Error(data.message || 'Failed to fetch recommendations');
       }
     } catch (err) {
-      setError(err.message);
+      console.error('Recommendation fetch error:', err);
+      setError(err.message || 'Failed to load recommendations');
     } finally {
       setLoading(false);
     }

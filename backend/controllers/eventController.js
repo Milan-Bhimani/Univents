@@ -236,6 +236,14 @@ exports.registerForEvent = async (req, res) => {
       });
     }
 
+    // Block organizer from registering for their own event
+    if ((event.organizer._id ? event.organizer._id.toString() : event.organizer.toString()) === req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Organizers cannot register for their own events.'
+      });
+    }
+
     // Check if user is already registered
     const isAlreadyRegistered = event.registeredParticipants.some(
       participant => participant.user.toString() === req.user._id.toString()
@@ -409,15 +417,16 @@ exports.deleteEvent = async (req, res) => {
 // Get events by category
 exports.getEventsByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
+    let { category } = req.params;
+    // Normalize category: lowercase, allow singular/plural, case-insensitive
+    const categoryPattern = new RegExp(`^${category}s?$`, 'i');
     const events = await Event.find({ 
-      category: category,
+      category: categoryPattern,
       published: true,
       date: { $gte: new Date() }
     })
     .populate('organizer', 'name email college')
     .sort({ date: 1 });
-
     res.json({
       success: true,
       count: events.length,
@@ -543,27 +552,84 @@ exports.getUserCreatedEvents = async (req, res) => {
 // Get analysis for a specific event (tickets booked, registrants, details)
 exports.getEventAnalysis = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id).populate('registeredParticipants.user', 'name email phone');
+    const event = await Event.findById(req.params.id)
+      .populate('organizer', 'name email')
+      .populate('registeredParticipants.user', 'name email phone');
+    
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
-    // Debug logs for troubleshooting
-    console.log('Event organizer:', event.organizer.toString());
-    console.log('Current user:', req.user._id.toString());
+    
     // Only allow organizer to view analysis
     if (event.organizer._id.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
+      return res.status(403).json({ success: false, message: 'Not authorized to view this event analysis' });
     }
+    
     const totalTickets = event.isTicketed
       ? event.tickets.reduce((sum, t) => sum + (t.quantity - t.availableQuantity), 0)
       : event.registeredParticipants.length;
-    const registrants = event.registeredParticipants.map(r => ({
-      name: r.user.name,
-      email: r.user.email,
-      phone: r.user.phone,
-      registeredAt: r.registeredAt,
-      status: r.status
-    }));
+    
+    // Debug: Log the raw registeredParticipants data
+    console.log('Raw registeredParticipants:', JSON.stringify(event.registeredParticipants, null, 2));
+    
+    // Process registrants with better error handling
+    const registrants = [];
+    for (const participant of event.registeredParticipants) {
+      try {
+        let userData = {
+          name: 'Unknown',
+          email: 'Unknown',
+          phone: 'Unknown'
+        };
+        
+        console.log('Processing participant:', participant);
+        console.log('Participant user type:', typeof participant.user);
+        console.log('Participant user value:', participant.user);
+        
+        if (participant.user) {
+          // Check if user is populated (object) or just an ID (string)
+          if (typeof participant.user === 'object' && participant.user !== null) {
+            console.log('User is populated object:', participant.user);
+            userData = {
+              name: participant.user.name || 'Unknown',
+              email: participant.user.email || 'Unknown',
+              phone: participant.user.phone || 'Unknown'
+            };
+          } else if (typeof participant.user === 'string') {
+            console.log('User is string ID, fetching user data...');
+            // Try to fetch user data if it's just an ID
+            const User = require('../models/User');
+            const user = await User.findById(participant.user).select('name email phone');
+            console.log('Fetched user:', user);
+            if (user) {
+              userData = {
+                name: user.name || 'Unknown',
+                email: user.email || 'Unknown',
+                phone: user.phone || 'Unknown'
+              };
+            }
+          }
+        }
+        
+        registrants.push({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          registeredAt: participant.registeredAt,
+          status: participant.status
+        });
+      } catch (userError) {
+        console.error('Error processing participant:', userError);
+        registrants.push({
+          name: 'Unknown',
+          email: 'Unknown',
+          phone: 'Unknown',
+          registeredAt: participant.registeredAt,
+          status: participant.status
+        });
+      }
+    }
+    
     res.json({
       success: true,
       data: {

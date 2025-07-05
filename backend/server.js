@@ -67,20 +67,6 @@ app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  res.setHeader('Content-Type', 'application/json');
-  const originalJson = res.json;
-  res.json = function(data) {
-    const responseData = typeof data === 'object' ? data : { message: data };
-    return originalJson.call(this, {
-      success: responseData.success !== undefined ? responseData.success : !responseData.error,
-      message: responseData.message || responseData.error || (responseData.success ? 'Operation successful' : 'Operation failed'),
-      data: responseData.data || null
-    });
-  };
-  next();
-});
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

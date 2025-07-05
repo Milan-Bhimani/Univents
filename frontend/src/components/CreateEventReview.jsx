@@ -96,98 +96,99 @@ const CreateEventReview = () => {
   if (!eventData) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 pt-20 relative">
       <BackButton />
       
-      {/* Progress Bar */}
-      <div className="flex items-center w-full max-w-5xl mx-auto mt-10 mb-8">
-        <div className="flex-1">
-          <div className="flex-1 flex items-center">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-4xl font-black text-yellow-400 text-center mb-2 drop-shadow-lg tracking-wide">Review Your Event</h1>
+        <p className="text-gray-400 text-center mb-12 text-lg">Review all details before publishing your event</p>
+        
+        {/* Progress Bar */}
+        <div className="flex items-center w-full mb-12">
+          <div className="flex-1">
             <div className="flex-1 flex items-center">
-              <div className="w-full h-1 bg-gray-300"></div>
-              <div className="w-6 h-6 bg-white border-2 border-gray-800 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-gray-800 rounded-full"></div>
+              <div className="flex-1 flex items-center">
+                <div className="w-full h-2 bg-gray-600 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-600 border-4 border-gray-700 rounded-full flex items-center justify-center ml-2">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center">
+                <div className="w-full h-2 bg-gray-600 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-600 border-4 border-gray-700 rounded-full flex items-center justify-center ml-2">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center">
+                <div className="w-full h-2 bg-yellow-400 rounded-full"></div>
+                <div className="w-8 h-8 bg-yellow-400 border-4 border-gray-800 rounded-full flex items-center justify-center ml-2">
+                  <div className="w-3 h-3 bg-gray-800 rounded-full"></div>
+                </div>
               </div>
             </div>
-            <div className="flex-1 flex items-center">
-              <div className="w-full h-1 bg-gray-300"></div>
-              <div className="w-6 h-6 bg-white border-2 border-gray-800 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-gray-800 rounded-full"></div>
-              </div>
+            
+            <div className="flex-1 flex items-center justify-between mt-4">
+              <span className="text-gray-400 font-semibold text-lg">Event Details</span>
+              <span className="text-gray-400 font-semibold text-lg">Ticketing</span>
+              <span className="text-yellow-400 font-bold text-lg">Review</span>
             </div>
-            <div className="flex-1 flex items-center">
-              <div className="w-full h-1 bg-yellow-400"></div>
-              <div className="w-6 h-6 bg-yellow-400 border-2 border-gray-800 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-gray-800 rounded-full"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex-1 flex items-center justify-between mt-2">
-            <span className="text-gray-400">Event Details</span>
-            <span className="text-gray-400">Ticketing</span>
-            <span className="text-yellow-400 font-semibold">Review</span>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-semibold text-amber-400 mb-8">Review Your Event</h2>
-
-        <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-lg border border-gray-700/30">
+        <div className="bg-gray-800/80 backdrop-blur-sm p-8 md:p-12 rounded-2xl border border-gray-700/30 shadow-2xl">
           {/* Event Image */}
-          <div className="relative h-64 mb-6 rounded-lg overflow-hidden">
+          <div className="relative h-80 mb-8 rounded-xl overflow-hidden shadow-lg">
             <img
               src={getEventImage(eventData.category)}
               alt="Event Banner"
               className="w-full h-full object-cover"
             />
             <div className="absolute top-4 left-4">
-              <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full text-base font-bold shadow-lg">
                 {eventData.category?.charAt(0).toUpperCase() + eventData.category?.slice(1)}
               </span>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h3 className="text-xl font-semibold text-yellow-400 mb-2">{eventData.title}</h3>
-              <p className="text-gray-300">{eventData.description}</p>
+              <h3 className="text-3xl font-bold text-yellow-400 mb-4">{eventData.title}</h3>
+              <p className="text-gray-300 text-lg leading-relaxed">{eventData.description}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-3 bg-gray-700/50 p-4 rounded-lg">
-                <IoCalendarOutline className="text-2xl text-yellow-400" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-4 bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
+                <IoCalendarOutline className="text-3xl text-yellow-400" />
                 <div>
-                  <div className="text-gray-400 text-sm">Date</div>
-                  <div className="text-white">{new Date(eventData.date).toLocaleDateString()}</div>
+                  <div className="text-gray-400 text-sm font-semibold">Date</div>
+                  <div className="text-white text-lg font-bold">{new Date(eventData.date).toLocaleDateString()}</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 bg-gray-700/50 p-4 rounded-lg">
-                <IoTimeOutline className="text-2xl text-yellow-400" />
+              <div className="flex items-center space-x-4 bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
+                <IoTimeOutline className="text-3xl text-yellow-400" />
                 <div>
-                  <div className="text-gray-400 text-sm">Time</div>
-                  <div className="text-white">{eventData.time}</div>
+                  <div className="text-gray-400 text-sm font-semibold">Time</div>
+                  <div className="text-white text-lg font-bold">{eventData.time}</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 bg-gray-700/50 p-4 rounded-lg">
-                <IoLocationOutline className="text-2xl text-yellow-400" />
+              <div className="flex items-center space-x-4 bg-gray-700/50 p-6 rounded-xl border border-gray-600/30">
+                <IoLocationOutline className="text-3xl text-yellow-400" />
                 <div>
-                  <div className="text-gray-400 text-sm">Location</div>
-                  <div className="text-white">{eventData.location}</div>
+                  <div className="text-gray-400 text-sm font-semibold">Location</div>
+                  <div className="text-white text-lg font-bold">{eventData.location}</div>
                 </div>
               </div>
             </div>
 
             {/* Event Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {eventData.interests && eventData.interests.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-yellow-400 mb-3">Interests</h4>
-                  <div className="flex flex-wrap gap-2">
+                <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-600/30">
+                  <h4 className="text-xl font-bold text-yellow-400 mb-4">Interests</h4>
+                  <div className="flex flex-wrap gap-3">
                     {eventData.interests.map((interest, index) => (
-                      <span key={index} className="bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                        {interest}
+                      <span key={index} className="bg-yellow-400/20 text-yellow-400 px-4 py-2 rounded-full text-base font-semibold border border-yellow-400/30">
+                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
                       </span>
                     ))}
                   </div>
@@ -195,12 +196,12 @@ const CreateEventReview = () => {
               )}
 
               {eventData.tags && eventData.tags.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-yellow-400 mb-3">Tags</h4>
-                  <div className="flex flex-wrap gap-2">
+                <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-600/30">
+                  <h4 className="text-xl font-bold text-yellow-400 mb-4">Tags</h4>
+                  <div className="flex flex-wrap gap-3">
                     {eventData.tags.map((tag, index) => (
-                      <span key={index} className="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm">
-                        {tag}
+                      <span key={index} className="bg-gray-600 text-gray-300 px-4 py-2 rounded-full text-base font-semibold">
+                        #{tag}
                       </span>
                     ))}
                   </div>
@@ -209,12 +210,12 @@ const CreateEventReview = () => {
             </div>
 
             {eventData.difficulty && (
-              <div>
-                <h4 className="text-lg font-semibold text-yellow-400 mb-2">Difficulty Level</h4>
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  eventData.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400' :
-                  eventData.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-red-500/20 text-red-400'
+              <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-600/30">
+                <h4 className="text-xl font-bold text-yellow-400 mb-4">Difficulty Level</h4>
+                <span className={`px-6 py-3 rounded-xl text-base font-bold ${
+                  eventData.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400 border border-green-400/30' :
+                  eventData.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-400/30' :
+                  'bg-red-500/20 text-red-400 border border-red-400/30'
                 }`}>
                   {eventData.difficulty.charAt(0).toUpperCase() + eventData.difficulty.slice(1)}
                 </span>
@@ -222,37 +223,37 @@ const CreateEventReview = () => {
             )}
 
             {eventData.prerequisites && eventData.prerequisites.length > 0 && (
-              <div>
-                <h4 className="text-lg font-semibold text-yellow-400 mb-2">Prerequisites</h4>
-                <ul className="list-disc list-inside text-gray-300 space-y-1">
+              <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-600/30">
+                <h4 className="text-xl font-bold text-yellow-400 mb-4">Prerequisites</h4>
+                <ul className="list-disc list-inside text-gray-300 space-y-2 text-lg">
                   {eventData.prerequisites.map((prereq, index) => (
-                    <li key={index}>{prereq}</li>
+                    <li key={index} className="font-semibold">{prereq}</li>
                   ))}
                 </ul>
               </div>
             )}
 
             {eventData.isTicketed && eventData.tickets && eventData.tickets.length > 0 && (
-              <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-                <div className="flex items-center space-x-2 mb-4">
-                  <FaTicketAlt className="text-yellow-400" />
-                  <h4 className="text-lg font-semibold text-white">Ticket Information</h4>
+              <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-600/30">
+                <div className="flex items-center space-x-3 mb-6">
+                  <FaTicketAlt className="text-2xl text-yellow-400" />
+                  <h4 className="text-xl font-bold text-white">Ticket Information</h4>
                 </div>
                 <div className="space-y-4">
                   {eventData.tickets.map((ticket, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
+                    <div key={index} className="flex justify-between items-center p-4 bg-gray-800/50 rounded-xl border border-gray-600/30">
                       <div>
-                        <h5 className="text-white font-medium">{ticket.name}</h5>
-                        <p className="text-gray-400 text-sm">{ticket.description}</p>
+                        <h5 className="text-white font-bold text-lg">{ticket.name}</h5>
+                        <p className="text-gray-400 text-base">{ticket.description}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-yellow-400 font-semibold">₹{ticket.price}</div>
-                        <div className="text-gray-400 text-sm">{ticket.quantity} available</div>
+                        <div className="text-yellow-400 font-bold text-xl">₹{ticket.price}</div>
+                        <div className="text-gray-400 text-base font-semibold">{ticket.quantity} available</div>
                       </div>
                     </div>
                   ))}
                   {eventData.ticketSale && (
-                    <div className="text-sm text-gray-400 mt-2">
+                    <div className="text-base text-gray-400 mt-4 font-semibold">
                       Sale period: {new Date(eventData.ticketSale.startDate).toLocaleDateString()} - {new Date(eventData.ticketSale.endDate).toLocaleDateString()}
                     </div>
                   )}
@@ -263,22 +264,26 @@ const CreateEventReview = () => {
         </div>
 
         {error && (
-          <div className="mt-4 text-red-400 text-sm bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+          <div className="mt-6 text-red-400 text-lg bg-red-500/10 px-6 py-4 rounded-xl border border-red-500/20 font-semibold">
             {error}
           </div>
         )}
 
-        <div className="flex justify-end items-center mt-8 gap-4">
+        <div className="flex justify-between items-center mt-12 pt-8 border-t border-gray-700/50">
           <button
             onClick={() => navigate('/create-event/ticket')}
-            className="px-6 py-2 text-white bg-gray-700 rounded-xl font-medium hover:bg-gray-600 transition-all"
+            className="px-8 py-3 text-white bg-gray-700/80 rounded-xl font-bold hover:bg-gray-600/80 transition-all border border-gray-600/30 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
           >
             Back
           </button>
           <button
             onClick={handlePublish}
             disabled={isSubmitting}
-            className={`px-6 py-2 rounded-xl font-medium transition-all ${isSubmitting ? 'bg-yellow-400/50 text-gray-700 cursor-not-allowed' : 'bg-yellow-400 text-gray-900 hover:bg-yellow-500'}`}
+            className={`px-12 py-4 rounded-xl font-bold text-lg transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 ${
+              isSubmitting ? 
+              'bg-yellow-400/50 text-gray-700 cursor-not-allowed' : 
+              'bg-yellow-400 text-gray-900 hover:bg-yellow-500 hover:shadow-xl'
+            }`}
           >
             {isSubmitting ? 'Publishing...' : 'Publish Event'}
           </button>

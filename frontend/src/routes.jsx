@@ -11,27 +11,19 @@ import ProfilePage from './components/ProfilePage';
 import BuyTickets from './components/BuyTickets';
 import Navbar from './components/Navbar';
 import OTPVerification from './components/OTPVerification';
-import AccountInfo from './components/AccountInfo';
 import EditProfile from './components/EditProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
-import SecurityPage from './components/SecurityPage';
-import AccountSettings from './components/AccountSettings';
 import ForgotPassword from './components/ForgotPassword';
 import EventHistory from './components/EventHistory';
 import TicketHistory from './components/TicketHistory';
 import OnlineEventsPage from './components/OnlineEventsPage';
 import AllEventsPage from './components/AllEventsPage';
-import HackathonsPage from './components/HackathonsPage';
-import SeminarsPage from './components/SeminarsPage';
-import WorkshopsPage from './components/WorkshopsPage';
-import ConferencesPage from './components/ConferencesPage';
-import NetworkingPage from './components/NetworkingPage';
-import CompetitionsPage from './components/CompetitionsPage';
 import ScrollToTop from './components/ScrollToTop';
 import MockPaymentPage from './components/MockPaymentPage';
 import YourEvents from './components/YourEvents';
 import EventAnalysis from './components/EventAnalysis';
+import CategoryPage from './components/CategoryPage';
 
 const Layout = () => {
   const location = useLocation();
@@ -109,58 +101,12 @@ const router = createBrowserRouter([{
           element: <ProtectedRoute><AllEventsPage /></ProtectedRoute>
         },
         {
-          path: 'hackathons',
-          element: <ProtectedRoute><HackathonsPage /></ProtectedRoute>
-        },
-        {
-          path: 'seminars',
-          element: <ProtectedRoute><SeminarsPage /></ProtectedRoute>
-        },
-        {
-          path: 'workshops',
-          element: <ProtectedRoute><WorkshopsPage /></ProtectedRoute>
-        },
-        {
-          path: 'conferences',
-          element: <ProtectedRoute><ConferencesPage /></ProtectedRoute>
-        },
-        {
-          path: 'networking',
-          element: <ProtectedRoute><NetworkingPage /></ProtectedRoute>
-        },
-        {
-          path: 'competitions',
-          element: <ProtectedRoute><CompetitionsPage /></ProtectedRoute>
-        },
-        {
           path: 'online',
           element: <ProtectedRoute><OnlineEventsPage /></ProtectedRoute>
         },
         {
           path: ':id',
           element: <EventPage />
-        }
-      ]
-    },
-    {
-      path: '/account',
-      element: <ProtectedRoute><Outlet /></ProtectedRoute>,
-      children: [
-        {
-          path: '',
-          element: <Navigate to="info" replace />
-        },
-        {
-          path: 'info',
-          element: <AccountInfo />
-        },
-        {
-          path: 'settings',
-          element: <AccountSettings />
-        },
-        {
-          path: 'security',
-          element: <SecurityPage />
         }
       ]
     },
@@ -195,6 +141,10 @@ const router = createBrowserRouter([{
     {
       path: '/your-events/:eventId',
       element: <ProtectedRoute><EventAnalysis /></ProtectedRoute>
+    },
+    {
+      path: '/category/:category',
+      element: <ProtectedRoute><CategoryPage /></ProtectedRoute>
     }
   ]
 }]);
