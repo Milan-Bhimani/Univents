@@ -109,7 +109,7 @@ const SignUp = () => {
         <div className="w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-yellow-400 p-12 flex flex-col justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent opacity-50"></div>
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold text-yellow-400 mb-6 tracking-tight">UniVents</h1>
+            <img src="/logo.png" alt="UniVents Logo" className="h-24 w-auto mb-6" />
             <p className="text-2xl font-semibold text-yellow-300/90 leading-relaxed">
               Discover tailored events. <br /> Sign up for personalized recommendations today!
             </p>

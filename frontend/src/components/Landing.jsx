@@ -13,6 +13,7 @@ export default function Landing() {
         transition={{ duration: 0.5 }}
         className="text-center max-w-4xl mx-auto"
       >
+        <img src="/logo.png" alt="UniVents Logo" className="h-32 w-auto mx-auto mb-6" />
         <h1 className="text-5xl font-bold text-yellow-400 mb-6">Welcome to UniVents</h1>
         <p className="text-xl text-gray-300 mb-8">
           Your one-stop platform for discovering, creating, and managing university events.

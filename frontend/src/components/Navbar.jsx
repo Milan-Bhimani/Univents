@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaHome, FaUserCircle, FaChevronDown, FaGlobe, FaLaptopCode, FaChalkboardTeacher, FaTools, FaMicrophone, FaHandshake, FaTrophy, FaStar, FaMapMarkerAlt } from "react-icons/fa";
+import { FaHome, FaUserCircle, FaChevronDown, FaGlobe, FaLaptopCode, FaChalkboardTeacher, FaTools, FaMicrophone, FaHandshake, FaTrophy, FaStar, FaMapMarkerAlt, FaRegCalendarAlt } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -49,13 +49,14 @@ const Navbar = () => {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 w-full bg-opacity-80 backdrop-blur-md bg-gray-800 shadow-lg z-[9999] px-6 py-4 flex justify-between items-center text-white"
+        className="fixed top-0 left-0 w-full bg-opacity-80 backdrop-blur-md bg-gray-800 shadow-lg z-[9999] px-6 py-6 flex justify-between items-center text-white"
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Link to="/home" className="flex items-center space-x-2 text-2xl font-extrabold text-yellow-400 hover:opacity-80 transition-opacity">
-          UniVents
+        <Link to="/home" className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
+          <FaRegCalendarAlt className="text-yellow-400 text-4xl" />
+          <span className="text-3xl font-extrabold text-yellow-400 tracking-wide">UniVents</span>
         </Link>
 
         <div className="flex items-center space-x-6">
@@ -144,6 +145,7 @@ const Navbar = () => {
           </div>
         </div>
       </motion.nav>
+      <div className="mb-4"></div>
     </>
   );
 };

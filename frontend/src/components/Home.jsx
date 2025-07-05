@@ -384,7 +384,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="text-center py-6 bg-gray-800 text-gray-400 mt-16">
-        © 2025 UniVents. All Rights Reserved.
+        <div className="flex items-center justify-center space-x-2">
+          <img src="/logo.png" alt="UniVents Logo" className="h-6 w-auto" />
+          <span>© 2025 UniVents. All Rights Reserved.</span>
+        </div>
       </footer>
     </div>
   );
