@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/authservice';
@@ -17,6 +17,16 @@ export default function Login() {
   const [otpSent, setOtpSent] = useState(false);
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [otp, setOTP] = useState('');
+  
+  // Add ref for OTP input field
+  const otpInputRef = useRef(null);
+
+  // Auto-focus OTP field when it appears
+  useEffect(() => {
+    if (showOTPInput && otpInputRef.current) {
+      otpInputRef.current.focus();
+    }
+  }, [showOTPInput]);
 
   const handleResendOTP = async () => {
     try {
@@ -198,6 +208,7 @@ export default function Login() {
                     className="w-full bg-gray-800/50 border border-gray-700 px-4 py-3 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-all duration-300 group-hover:border-yellow-400/30"
                     required
                     maxLength="6"
+                    ref={otpInputRef}
                   />
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>

@@ -147,38 +147,9 @@ const ProfilePage = () => {
             <div className="w-full max-w-md">
               <button
                 onClick={() => navigate('/profile/edit')}
-                className="w-full btn-primary flex items-center justify-center gap-2 mb-4"
+                className="w-full btn-primary flex items-center justify-center gap-2"
               >
                 <span>Edit Profile</span>
-              </button>
-              
-              {/* Cleanup orphaned tickets button */}
-              <button
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch('http://localhost:5000/api/users/cleanup-tickets', {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                      }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                      alert(data.message);
-                      window.location.reload();
-                    } else {
-                      alert('Error: ' + data.message);
-                    }
-                  } catch (error) {
-                    alert('Error cleaning up tickets: ' + error.message);
-                  }
-                }}
-                className="w-full bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl py-3 px-6 font-semibold hover:bg-red-500/30 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <span>Clean Up Orphaned Tickets</span>
               </button>
             </div>
           </div>

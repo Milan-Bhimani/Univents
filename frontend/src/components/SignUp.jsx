@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../services/authservice";
@@ -15,6 +15,20 @@ const SignUp = () => {
   const [otp, setOTP] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [otpSent, setOtpSent] = useState(false);
+  
+  // Add ref for OTP input field
+  const otpInputRef = useRef(null);
+
+  // Auto-focus OTP field when it appears
+  useEffect(() => {
+    if (showOTPInput && otpInputRef.current) {
+      otpInputRef.current.focus();
+    }
+  }, [showOTPInput]);
+
   const handleResendOTP = async () => {
     try {
       setIsLoading(true);
@@ -27,9 +41,6 @@ const SignUp = () => {
       setIsLoading(false);
     };
   };
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const [otpSent, setOtpSent] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,6 +205,7 @@ const SignUp = () => {
                     placeholder="Enter OTP sent to your email"
                     className="w-full bg-gray-800/50 border border-gray-700 px-4 py-3 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-all duration-300 group-hover:border-yellow-400/30"
                     required
+                    ref={otpInputRef}
                   />
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-yellow-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>

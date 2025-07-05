@@ -259,47 +259,7 @@ router.put('/tickets/:ticketId/reminder', async (req, res) => {
   }
 });
 
-// Debug route - add before module.exports
 
-// Clean up orphaned tickets (admin only)
-router.post('/cleanup-tickets', async (req, res) => {
-  try {
-    const users = await User.find({ 'tickets.0': { $exists: true } });
-    let totalOrphanedTickets = 0;
-    
-    for (const user of users) {
-      const originalTicketCount = user.tickets.length;
-      
-      // Filter out tickets where the event no longer exists
-      const validTickets = [];
-      for (const ticket of user.tickets) {
-        const eventExists = await require('../models/Event').findById(ticket.eventId);
-        if (eventExists) {
-          validTickets.push(ticket);
-        } else {
-          totalOrphanedTickets++;
-        }
-      }
-      
-      // Update user with only valid tickets
-      if (validTickets.length !== originalTicketCount) {
-        await User.findByIdAndUpdate(user._id, { tickets: validTickets });
-      }
-    }
-    
-    res.json({
-      success: true,
-      message: `Cleanup complete! Removed ${totalOrphanedTickets} orphaned tickets`
-    });
-    
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error during cleanup'
-    });
-  }
-});
 
 
 module.exports = router;

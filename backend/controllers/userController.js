@@ -115,42 +115,4 @@ exports.updateTicketReminder = async (req, res) => {
   }
 };
 
-// Clean up orphaned tickets (for deleted events)
-exports.cleanupOrphanedTickets = async (req, res) => {
-  try {
-    const users = await User.find({ 'tickets.0': { $exists: true } });
-    let totalOrphanedTickets = 0;
-    
-    for (const user of users) {
-      const originalTicketCount = user.tickets.length;
-      
-      // Filter out tickets where the event no longer exists
-      const validTickets = [];
-      for (const ticket of user.tickets) {
-        const eventExists = await Event.findById(ticket.eventId);
-        if (eventExists) {
-          validTickets.push(ticket);
-        } else {
-          totalOrphanedTickets++;
-        }
-      }
-      
-      // Update user with only valid tickets
-      if (validTickets.length !== originalTicketCount) {
-        await User.findByIdAndUpdate(user._id, { tickets: validTickets });
-      }
-    }
-    
-    res.json({
-      success: true,
-      message: `Cleanup complete! Removed ${totalOrphanedTickets} orphaned tickets`
-    });
-    
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error during cleanup'
-    });
-  }
-}; 
+ 
