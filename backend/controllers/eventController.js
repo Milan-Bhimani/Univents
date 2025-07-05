@@ -378,7 +378,7 @@ exports.deleteEvent = async (req, res) => {
     }
 
     // Check if user is the organizer
-    if (event.organizer.toString() !== req.user._id.toString()) {
+    if ((event.organizer._id ? event.organizer._id.toString() : event.organizer.toString()) !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this event'
@@ -518,6 +518,165 @@ exports.debugEvents = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching debug info'
+    });
+  }
+};
+
+// Get all events created by the current user
+exports.getUserCreatedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ organizer: req.user._id }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      count: events.length,
+      data: events
+    });
+  } catch (error) {
+    console.error('Error fetching user-created events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching your events'
+    });
+  }
+};
+
+// Get analysis for a specific event (tickets booked, registrants, details)
+exports.getEventAnalysis = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id).populate('registeredParticipants.user', 'name email phone');
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    // Debug logs for troubleshooting
+    console.log('Event organizer:', event.organizer.toString());
+    console.log('Current user:', req.user._id.toString());
+    // Only allow organizer to view analysis
+    if (event.organizer._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    const totalTickets = event.isTicketed
+      ? event.tickets.reduce((sum, t) => sum + (t.quantity - t.availableQuantity), 0)
+      : event.registeredParticipants.length;
+    const registrants = event.registeredParticipants.map(r => ({
+      name: r.user.name,
+      email: r.user.email,
+      phone: r.user.phone,
+      registeredAt: r.registeredAt,
+      status: r.status
+    }));
+    res.json({
+      success: true,
+      data: {
+        eventId: event._id,
+        eventTitle: event.title,
+        totalTickets,
+        totalRegistrants: registrants.length,
+        registrants
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching event analysis:', error);
+    res.status(500).json({ success: false, message: 'Error fetching event analysis' });
+  }
+};
+
+// Purchase tickets for an event
+exports.purchaseTickets = async (req, res) => {
+  try {
+    const { ticketId, quantity } = req.body;
+    const eventId = req.params.eventId;
+
+    if (!ticketId || !quantity || quantity < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please specify a valid ticket type and quantity'
+      });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Block organizer from buying tickets
+    if ((event.organizer._id ? event.organizer._id.toString() : event.organizer.toString()) === req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Organizers cannot buy tickets for their own events.'
+      });
+    }
+
+    if (!event.isTicketed) {
+      return res.status(400).json({
+        success: false,
+        message: 'This event does not have tickets available'
+      });
+    }
+
+    const ticket = event.tickets.id(ticketId);
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket type not found'
+      });
+    }
+
+    if (ticket.availableQuantity < quantity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Not enough tickets available'
+      });
+    }
+
+    // Update ticket quantity
+    ticket.availableQuantity -= quantity;
+    await event.save();
+
+    // Add tickets to user's purchases
+    const user = await User.findById(req.user._id);
+    if (!user.tickets) {
+      user.tickets = [];
+    }
+
+    user.tickets.push({
+      eventId: event._id,
+      ticketId: ticket._id,
+      ticketName: ticket.name,
+      quantity,
+      purchaseDate: new Date(),
+      totalAmount: quantity * ticket.price
+    });
+
+    await user.save();
+
+    // Add user to registeredParticipants if not already present
+    const isAlreadyRegistered = event.registeredParticipants.some(
+      participant => participant.user.toString() === req.user._id.toString()
+    );
+    if (!isAlreadyRegistered) {
+      event.registeredParticipants.push({
+        user: req.user._id,
+        registeredAt: new Date(),
+        status: 'registered'
+      });
+      await event.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Tickets purchased successfully',
+      data: {
+        tickets: user.tickets[user.tickets.length - 1]
+      }
+    });
+  } catch (error) {
+    console.error('Error purchasing tickets:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error processing ticket purchase'
     });
   }
 };

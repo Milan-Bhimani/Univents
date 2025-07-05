@@ -128,6 +128,7 @@ const Navbar = () => {
               >
                 <div className="py-1">
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Profile</Link>
+                  <Link to="/your-events" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200 focus:outline-none focus:bg-gray-700 focus:text-yellow-400" role="menuitem">Your Events</Link>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

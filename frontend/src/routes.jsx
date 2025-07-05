@@ -30,6 +30,8 @@ import NetworkingPage from './components/NetworkingPage';
 import CompetitionsPage from './components/CompetitionsPage';
 import ScrollToTop from './components/ScrollToTop';
 import MockPaymentPage from './components/MockPaymentPage';
+import YourEvents from './components/YourEvents';
+import EventAnalysis from './components/EventAnalysis';
 
 const Layout = () => {
   const location = useLocation();
@@ -185,6 +187,14 @@ const router = createBrowserRouter([{
     {
       path: '/mock-payment',
       element: <MockPaymentPage />
+    },
+    {
+      path: '/your-events',
+      element: <ProtectedRoute><YourEvents /></ProtectedRoute>
+    },
+    {
+      path: '/your-events/:eventId',
+      element: <ProtectedRoute><EventAnalysis /></ProtectedRoute>
     }
   ]
 }]);
