@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://univents-764n.onrender.com/api';
 
 // Generate OTP for a given email
 export const generateOTP = async (email) => {

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaEye, FaEyeSlash, FaRegCalendarAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../services/authservice';
+import { login } from '../services/authService';
 import { generateOTP, verifyOTP } from '../services/otpService';
 
 export default function Login() {

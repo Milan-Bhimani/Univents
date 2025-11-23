@@ -35,7 +35,7 @@ const LocationPermission = ({ onLocationUpdate, onSkip }) => {
       
       // Update user location on server
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/location/update-location', {
+      const response = await fetch('https://univents-764n.onrender.com/api/location/update-location', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

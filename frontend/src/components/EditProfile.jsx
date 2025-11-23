@@ -74,7 +74,7 @@ const EditProfile = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch('https://univents-764n.onrender.com/api/users/profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

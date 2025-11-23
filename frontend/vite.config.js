@@ -9,7 +9,7 @@ export default defineConfig({
     host: true,
     open: true,
     proxy: {
-      '/api': 'http://localhost:5000'
+      '/api': 'https://univents-764n.onrender.com'
     }
   },
   build: {

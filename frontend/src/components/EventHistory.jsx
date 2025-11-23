@@ -4,7 +4,7 @@ import BackButton from './BackButton';
 import { getEventImage } from '../utils/eventImages';
 
 // Constants
-const API_URL = 'http://localhost:5000/api/events/registered';
+const API_URL = 'https://univents-764n.onrender.com/api/events/registered';
 
 export default function EventHistory() {
   const [events, setEvents] = useState([]);

@@ -1,21 +1,6 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  tls: { rejectUnauthorized: false }
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('[MAIL] SMTP Error:', error);
   } else {
-    console.log('[MAIL] SMTP transporter ready');
-  }
+  console.log('[MAIL] SMTP transporter ready');
+}
 });
 
 // Email templates that match UniVents theme
@@ -136,7 +121,7 @@ const emailTemplates = {
     </body>
     </html>
   `,
-  
+
   eventNotification: (data) => `
     <!DOCTYPE html>
     <html>
@@ -262,14 +247,14 @@ const emailTemplates = {
             <div class="event-meta">
               <div class="meta-item">
                 <span class="meta-icon">📅</span>
-                <span>Date: ${new Date(data.event.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</span>
+                <span>Date: ${new Date(data.event.date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}</span>
               </div>
               <div class="meta-item">
                 <span class="meta-icon">📍</span>
@@ -304,7 +289,7 @@ const emailTemplates = {
     </body>
     </html>
   `,
-  
+
   passwordReset: (otp) => `
     <!DOCTYPE html>
     <html>
@@ -425,12 +410,12 @@ const emailTemplates = {
 
 exports.sendMail = async ({ to, subject, html, template, data }) => {
   let emailHtml = html;
-  
+
   // Use template if provided
   if (template && emailTemplates[template]) {
     emailHtml = emailTemplates[template](data);
   }
-  
+
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,

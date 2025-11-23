@@ -76,7 +76,7 @@ export default function CategoryPage() {
     const fetchCount = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/events/category/${category}`, {
+        const response = await fetch(`https://univents-764n.onrender.com/api/events/category/${category}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

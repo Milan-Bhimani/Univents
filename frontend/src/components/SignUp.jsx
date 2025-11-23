@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { signup } from "../services/authservice";
+import { signup } from "../services/authService";
 import { generateOTP, verifyOTP } from '../services/otpService';
 
 const SignUp = () => {

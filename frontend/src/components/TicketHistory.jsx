@@ -11,7 +11,7 @@ export default function TicketHistory() {
     const fetchTickets = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/tickets/history', {
+        const response = await fetch('https://univents-764n.onrender.com/api/tickets/history', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

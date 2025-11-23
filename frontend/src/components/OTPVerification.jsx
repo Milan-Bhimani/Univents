@@ -26,7 +26,7 @@ const OTPVerification = ({ email, onVerificationComplete }) => {
         }, 30000); // 30 second timeout
       });
 
-      const fetchPromise = fetch('http://localhost:5000/api/verify-otp', {
+      const fetchPromise = fetch('https://univents-764n.onrender.com/api/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

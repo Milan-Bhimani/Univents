@@ -12,7 +12,7 @@ export default function BuyTickets() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/events/${eventId}/purchase`, {
+      const response = await fetch(`https://univents-764n.onrender.com/api/events/${eventId}/purchase`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

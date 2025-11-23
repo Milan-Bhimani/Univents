@@ -55,7 +55,7 @@ export default function EventPage() {
         throw new Error('Please login to view events');
       }
 
-      const response = await fetch(`http://localhost:5000/api/events/${id}`, {
+      const response = await fetch(`https://univents-764n.onrender.com/api/events/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ export default function EventPage() {
       if (!token) {
         throw new Error('Please login to register for events');
       }
-      const response = await fetch(`http://localhost:5000/api/events/${id}/register`, {
+      const response = await fetch(`https://univents-764n.onrender.com/api/events/${id}/register`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

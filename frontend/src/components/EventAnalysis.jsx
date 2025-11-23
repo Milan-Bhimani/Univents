@@ -14,7 +14,7 @@ const EventAnalysis = () => {
       setError(null);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:5000/api/events/${eventId}/analysis`, {
+        const res = await fetch(`https://univents-764n.onrender.com/api/events/${eventId}/analysis`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -37,8 +37,8 @@ const EventAnalysis = () => {
     if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
     try {
       const token = localStorage.getItem('token');
-      console.log('Making DELETE request to:', `http://localhost:5000/api/events/${eventId}`);
-      const res = await fetch(`http://localhost:5000/api/events/${eventId}`, {
+      console.log('Making DELETE request to:', `https://univents-764n.onrender.com/api/events/${eventId}`);
+      const res = await fetch(`https://univents-764n.onrender.com/api/events/${eventId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

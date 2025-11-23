@@ -18,7 +18,7 @@ const RecommendedEvents = () => {
       setError('');
       const token = localStorage.getItem('token');
       
-      const response = await fetch('http://localhost:5000/api/recommendations/personalized', {
+      const response = await fetch('https://univents-764n.onrender.com/api/recommendations/personalized', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

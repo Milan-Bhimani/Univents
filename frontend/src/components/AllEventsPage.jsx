@@ -36,7 +36,7 @@ const AllEventsPage = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/events', {
+      const response = await fetch('https://univents-764n.onrender.com/api/events', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

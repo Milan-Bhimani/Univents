@@ -62,7 +62,7 @@ export default function MockPaymentPage() {
         const token = localStorage.getItem('token');
         if (eventId && ticketId) {
           // Ticketed event: call /purchase
-          const response = await fetch(`http://localhost:5000/api/events/${eventId}/purchase`, {
+          const response = await fetch(`https://univents-764n.onrender.com/api/events/${eventId}/purchase`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -78,7 +78,7 @@ export default function MockPaymentPage() {
           }
         } else if (eventId) {
           // Free event: call /register, then add a free ticket to user.tickets
-          const regRes = await fetch(`http://localhost:5000/api/events/${eventId}/register`, {
+          const regRes = await fetch(`https://univents-764n.onrender.com/api/events/${eventId}/register`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -92,7 +92,7 @@ export default function MockPaymentPage() {
             return;
           }
           // Add a free ticket to user.tickets (mock)
-          await fetch('http://localhost:5000/api/users/tickets', {
+          await fetch('https://univents-764n.onrender.com/api/users/tickets', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

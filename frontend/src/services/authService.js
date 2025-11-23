@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = 'https://univents-764n.onrender.com/api/auth';
 
 const validateToken = async (token) => {
   try {
@@ -63,7 +63,7 @@ export const login = async (email, password) => {
         return data;
       }
     }
-    
+
     console.error('Unexpected response structure:', data);
     throw new Error(data.message || 'Invalid response format from server');
   } catch (error) {

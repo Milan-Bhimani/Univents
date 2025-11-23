@@ -38,7 +38,7 @@ const NearbyEvents = ({ userLocation, maxDistance = 25000 }) => {
       setError('');
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:5000/api/location/nearby-events?latitude=${latitude}&longitude=${longitude}&maxDistance=${maxDistance}`,
+        `https://univents-764n.onrender.com/api/location/nearby-events?latitude=${latitude}&longitude=${longitude}&maxDistance=${maxDistance}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`

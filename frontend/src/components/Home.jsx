@@ -44,7 +44,7 @@ export default function Home() {
   const checkUserSetup = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch('https://univents-764n.onrender.com/api/users/profile', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -81,7 +81,7 @@ export default function Home() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/events', {
+      const response = await fetch('https://univents-764n.onrender.com/api/events', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -104,7 +104,7 @@ export default function Home() {
   const fetchOnlineEvents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/events?onlineOnly=true', {
+      const response = await fetch('https://univents-764n.onrender.com/api/events?onlineOnly=true', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -123,7 +123,7 @@ export default function Home() {
     await Promise.all(categories.map(async (category) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/events/category/${category.id}`, {
+        const response = await fetch(`https://univents-764n.onrender.com/api/events/category/${category.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -143,7 +143,7 @@ export default function Home() {
   const handleInterestsSave = async (interests) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/recommendations/preferences', {
+      const response = await fetch('https://univents-764n.onrender.com/api/recommendations/preferences', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
