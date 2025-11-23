@@ -1,26 +1,6 @@
 // emailService.js
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 require("dotenv").config();
-
-// Create Brevo SMTP transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_LOGIN,
-    pass: process.env.BREVO_SMTP_PASSWORD
-  }
-});
-
-// Verify SMTP
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("[MAIL] SMTP Error:", err);
-  } else {
-    console.log("[MAIL] Brevo SMTP is ready");
-  }
-});
 
 // Email templates
 const emailTemplates = {
@@ -59,7 +39,7 @@ const emailTemplates = {
   `
 };
 
-// Main send function
+// Main send function using Brevo HTTP API
 exports.sendMail = async ({ to, subject, html, template, data }) => {
   let emailHtml = html;
 
@@ -67,12 +47,39 @@ exports.sendMail = async ({ to, subject, html, template, data }) => {
     emailHtml = emailTemplates[template](data);
   }
 
-  return transporter.sendMail({
-    from: process.env.BREVO_FROM_EMAIL,
-    to,
-    subject,
-    html: emailHtml
-  });
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.error("[MAIL] Missing BREVO_API_KEY environment variable");
+    throw new Error("Email configuration error");
+  }
+
+  try {
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          email: process.env.BREVO_FROM_EMAIL || "noreply@univents.com",
+          name: "UniVents"
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: emailHtml
+      },
+      {
+        headers: {
+          "accept": "application/json",
+          "api-key": apiKey,
+          "content-type": "application/json"
+        }
+      }
+    );
+
+    console.log("[MAIL] Email sent successfully via API:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("[MAIL] API Error:", error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
 // Convenience methods
