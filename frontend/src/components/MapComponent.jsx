@@ -41,7 +41,7 @@ const MapComponent = ({ events = [], userLocation, center, height = '400px' }) =
     ? center
     : hasValidUserLocation
     ? [userLocation.latitude, userLocation.longitude]
-    : [40.7128, -74.0060]; // Default to NYC
+    : [20.5937, 78.9629]; // Default to NYC
 
   return (
     <div className="w-full rounded-lg overflow-hidden border border-gray-700 relative z-0">
